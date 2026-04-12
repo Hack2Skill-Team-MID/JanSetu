@@ -1,34 +1,36 @@
-# 🎨 JanSetu Web — Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-> Next.js 14 application for JanSetu's NGO Dashboard and Volunteer Portal.
->
-> **Owned by: Frontend Dev (Teammate 2)**
+## Getting Started
 
-## Setup
-
-This directory will be initialized with Next.js. Run:
+First, run the development server:
 
 ```bash
-cd apps/web
-npx -y create-next-app@latest ./ --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --no-turbopack
-npm install
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Pages to Build
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-| Page | Route | Description |
-|------|-------|-------------|
-| Landing | `/` | Hero, features, CTA |
-| Login | `/login` | Email/password login |
-| Register | `/register` | Role-based registration |
-| Dashboard | `/dashboard` | NGO needs map + charts |
-| Needs | `/dashboard/needs` | Community needs list |
-| Tasks | `/dashboard/tasks` | Task management |
-| Volunteer Home | `/volunteer` | Matched opportunities |
-| Profile | `/profile` | User profile + settings |
-| Admin | `/admin` | System admin panel |
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## API Client
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Use `src/lib/api.ts` to call backend endpoints. See `packages/shared/src/types/api.types.ts` for types.
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
