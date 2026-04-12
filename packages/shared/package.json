@@ -1,0 +1,14 @@
+{
+  "name": "@jansetu/shared",
+  "version": "1.0.0",
+  "description": "Shared types and constants for JanSetu",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "jansetu",
+  "version": "1.0.0",
+  "description": "JanSetu (जन सेतु) — Smart Resource Allocation Platform for Community Needs & Volunteer Matching",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "dev:web": "npm -w apps/web run dev",
+    "dev:server": "npm -w server run dev",
+    "build": "npm -w apps/web run build && npm -w server run build",
+    "lint": "npm -w apps/web run lint",
+    "clean": "rimraf node_modules apps/*/node_modules server/node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "rimraf": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hack2Skill-Team-MID/jansetu.git"
+  },
+  "keywords": [
+    "jansetu",
+    "smart-resource-allocation",
+    "volunteer-matching",
+    "community-needs",
+    "ngo",
+    "hackathon"
+  ],
+  "author": "Hack2Skill-Team-MID",
+  "license": "MIT"
+}
