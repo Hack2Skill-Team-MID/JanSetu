@@ -12,7 +12,6 @@ import {
   TrendingUp,
   MapPin
 } from 'lucide-react';
-import { NEED_CATEGORIES } from '../../../../packages/shared/src/constants/categories';
 
 export default function DashboardController() {
   const user = useAuthStore((state) => state.user);
