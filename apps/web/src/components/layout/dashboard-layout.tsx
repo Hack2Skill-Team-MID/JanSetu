@@ -20,7 +20,8 @@ import {
   Heart,
   IndianRupee,
   MessageSquare,
-  Map
+  Map,
+  Bot
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
     { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
+    { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: Bot },
     { name: 'Volunteers', href: '/dashboard/volunteers', icon: Users },
   ];
 
@@ -54,6 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
     { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
+    { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: Bot },
     { name: 'My Profile', href: '/dashboard/profile', icon: Settings },
   ];
 
