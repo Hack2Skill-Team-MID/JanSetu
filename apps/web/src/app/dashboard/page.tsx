@@ -18,9 +18,13 @@ export default function DashboardController() {
   
   if (!user) return <div className="text-white text-center p-10">Loading...</div>;
 
+  const role = user.role;
+  const isDonor = role === 'donor';
+  const isVolunteer = role === 'volunteer';
+
   return (
     <DashboardLayout>
-      {user.role === 'volunteer' ? <VolunteerDashboard /> : <NgoDashboard />}
+      {isVolunteer ? <VolunteerDashboard /> : isDonor ? <DonorDashboard /> : <NgoDashboard />}
     </DashboardLayout>
   );
 }
@@ -258,6 +262,82 @@ function StatCard({ title, value, icon, trend, isAlert }: any) {
           {trend}
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================
+// DONOR DASHBOARD
+// ============================================
+function DonorDashboard() {
+  const [donations, setDonations] = useState<any>(null);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [donRes, campRes] = await Promise.all([
+          api.get('/donations/my').catch(() => ({ data: { success: false } })),
+          api.get('/campaigns').catch(() => ({ data: { success: false } })),
+        ]);
+        if (donRes.data.success) setDonations(donRes.data.data);
+        if (campRes.data.success) setCampaigns(campRes.data.data.campaigns || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-white">
+          Welcome back, {user?.name?.split(' ')[0]} 👋
+        </h1>
+        <p className="text-slate-400 mt-1">Your giving makes a real difference</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard title="Total Donated" value={`₹${(donations?.totalDonated || 0).toLocaleString()}`}
+          icon={<TrendingUp className="w-5 h-5 text-pink-400" />} trend="Every rupee counts" />
+        <StatCard title="Campaigns Funded" value={String(donations?.count || 0)}
+          icon={<ClipboardList className="w-5 h-5 text-indigo-400" />} />
+        <StatCard title="Lives Impacted" value={String(Math.round((donations?.totalDonated || 0) / 50))}
+          icon={<Users className="w-5 h-5 text-emerald-400" />} trend="Estimated direct impact" />
+      </div>
+
+      <div>
+        <h2 className="text-lg font-semibold text-slate-200 mb-4">Campaigns You Can Fund</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {campaigns.slice(0, 4).map((c: any) => (
+            <div key={c._id} className="glass-card rounded-2xl border border-slate-800 p-5 hover:border-pink-500/30 transition-colors">
+              <h3 className="text-sm font-semibold text-slate-100 mb-1">{c.title}</h3>
+              <p className="text-xs text-slate-400 mb-3">{c.description?.slice(0, 80)}</p>
+              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+                <div className="h-full bg-gradient-to-r from-pink-600 to-indigo-500 rounded-full"
+                  style={{ width: `${c.goals?.fundingGoal ? Math.min((c.goals.fundingRaised / c.goals.fundingGoal) * 100, 100) : 0}%` }} />
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>₹{(c.goals?.fundingRaised || 0).toLocaleString()} raised</span>
+                <span>₹{(c.goals?.fundingGoal || 0).toLocaleString()} goal</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,8 @@ import {
   Package,
   Heart,
   IndianRupee,
-  MessageSquare
+  MessageSquare,
+  Map
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Manage Needs', href: '/dashboard/needs', icon: MapPin },
     { name: 'Process Surveys', href: '/dashboard/surveys', icon: FileText },
     { name: 'Resources', href: '/dashboard/resources', icon: Package },
+    { name: 'Impact Map', href: '/dashboard/map', icon: Map },
     { name: 'Donate', href: '/dashboard/donate', icon: Heart },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
@@ -47,6 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'My Portal', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Open Tasks', href: '/dashboard/tasks', icon: Briefcase },
     { name: 'Campaigns', href: '/dashboard/campaigns', icon: Target },
+    { name: 'Impact Map', href: '/dashboard/map', icon: Map },
     { name: 'Donate', href: '/dashboard/donate', icon: Heart },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
