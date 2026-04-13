@@ -12,7 +12,13 @@ import {
   X, 
   Bell,
   MapPin,
-  Briefcase
+  Briefcase,
+  Target,
+  Globe,
+  Trophy,
+  Package,
+  Heart,
+  IndianRupee
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -21,18 +27,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const logout = useAuthStore((state) => state.logout);
   const pathname = usePathname();
 
-  const isNgo = user?.role === 'ngo_coordinator' || user?.role === 'admin';
+  const isNgo = user?.role === 'ngo_coordinator' || user?.role === 'ngo_admin' || user?.role === 'admin' || user?.role === 'platform_admin';
 
   const ngoNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Campaigns', href: '/dashboard/campaigns', icon: Target },
     { name: 'Manage Needs', href: '/dashboard/needs', icon: MapPin },
     { name: 'Process Surveys', href: '/dashboard/surveys', icon: FileText },
+    { name: 'Resources', href: '/dashboard/resources', icon: Package },
+    { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
+    { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
     { name: 'Volunteers', href: '/dashboard/volunteers', icon: Users },
   ];
 
   const volunteerNavigation = [
     { name: 'My Portal', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Tasks matched for me', href: '/dashboard/tasks', icon: Briefcase },
+    { name: 'Open Tasks', href: '/dashboard/tasks', icon: Briefcase },
+    { name: 'Campaigns', href: '/dashboard/campaigns', icon: Target },
+    { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
+    { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
     { name: 'My Profile', href: '/dashboard/profile', icon: Settings },
   ];
 
