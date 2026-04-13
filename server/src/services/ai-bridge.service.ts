@@ -205,6 +205,58 @@ class AiBridgeService {
       };
     }
   }
+
+  // AI Chatbot
+  async chatbot(message: string, context: string, role: string): Promise<{ response: string; suggestions: string[] }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/chatbot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, context, role }),
+      });
+      if (!response.ok) throw new Error(`AI ${response.status}`);
+      const data = await response.json();
+      return data.data || { response: 'AI service unavailable', suggestions: [] };
+    } catch (error: any) {
+      console.error('❌ AI chatbot error:', error.message);
+      return { response: 'AI assistant is currently unavailable. Please try again later.', suggestions: [] };
+    }
+  }
+
+  // Generate Impact Report
+  async generateImpactReport(campaignData: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/generate-impact-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaignData),
+      });
+      if (!response.ok) throw new Error(`AI ${response.status}`);
+      const data = await response.json();
+      return data.data;
+    } catch (error: any) {
+      console.error('❌ AI impact report error:', error.message);
+      return null;
+    }
+  }
+
+  // Detect Fraud
+  async detectFraud(data: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/detect-fraud`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error(`AI ${response.status}`);
+      const result = await response.json();
+      return result.data;
+    } catch (error: any) {
+      console.error('❌ AI fraud detection error:', error.message);
+      return { risk_score: 0, risk_level: 'low', flags: [], recommendation: 'approve' };
+    }
+  }
 }
 
 export const aiBridgeService = new AiBridgeService();
+

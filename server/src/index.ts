@@ -19,6 +19,7 @@ import resourceRoutes from './routes/resources.routes';
 import messageRoutes from './routes/messages.routes';
 import gamificationRoutes from './routes/gamification.routes';
 import networkRoutes from './routes/network.routes';
+import aiBridgeRoutes from './routes/ai-bridge.routes';
 
 dotenv.config({ path: '../.env' });
 
@@ -34,7 +35,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
     message: 'JanSetu API is running 🌉',
-    version: '1.0.0',
+    version: '2.0.0',
     timestamp: new Date().toISOString(),
   });
 });
@@ -55,6 +56,7 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/network', networkRoutes);
+app.use('/api/ai-bridge', aiBridgeRoutes);
 
 // Error handler (must be after routes)
 app.use(errorHandler);
