@@ -12,6 +12,13 @@ import tasksRoutes from './routes/tasks.routes';
 import volunteerRoutes from './routes/volunteers.routes';
 import surveyRoutes from './routes/surveys.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import organizationRoutes from './routes/organizations.routes';
+import campaignRoutes from './routes/campaigns.routes';
+import donationRoutes from './routes/donations.routes';
+import resourceRoutes from './routes/resources.routes';
+import messageRoutes from './routes/messages.routes';
+import gamificationRoutes from './routes/gamification.routes';
+import networkRoutes from './routes/network.routes';
 
 dotenv.config({ path: '../.env' });
 
@@ -32,13 +39,22 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// API Routes
+// API Routes — Core
 app.use('/api/auth', authRoutes);
 app.use('/api/needs', needsRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
+// API Routes — Ecosystem
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/donations', donationRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/network', networkRoutes);
 
 // Error handler (must be after routes)
 app.use(errorHandler);

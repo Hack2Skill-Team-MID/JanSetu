@@ -171,6 +171,40 @@ class AiBridgeService {
       return false;
     }
   }
+  // Extract insights from text (for impact reports, analysis)
+  async extractInsights(data: { text: string }): Promise<{
+    summary: string;
+    categories: string[];
+    urgency: string;
+    keyIssues: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/extract-insights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI service responded with ${response.status}`);
+      }
+
+      return response.json() as Promise<{
+        summary: string;
+        categories: string[];
+        urgency: string;
+        keyIssues: string[];
+      }>;
+    } catch (error: any) {
+      console.error('❌ AI Service error (extract-insights):', error.message);
+      return {
+        summary: 'Analysis pending — AI service unavailable',
+        categories: [],
+        urgency: 'medium',
+        keyIssues: [],
+      };
+    }
+  }
 }
 
 export const aiBridgeService = new AiBridgeService();

@@ -5,9 +5,21 @@ export interface IUserDocument extends Document {
   name: string;
   email: string;
   password: string;
-  role: 'volunteer' | 'ngo_coordinator' | 'admin';
+  role: 'platform_admin' | 'ngo_admin' | 'ngo_staff' | 'volunteer' | 'donor' | 'community_reporter';
   avatar?: string;
   isVerified: boolean;
+  
+  // Multi-tenant
+  organizationId?: mongoose.Types.ObjectId;
+  
+  // Reputation & Gamification
+  reputationScore: number;
+  badges: string[];
+  points: number;
+  
+  // Preferences
+  language: string;
+  
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -38,11 +50,24 @@ const userSchema = new Schema<IUserDocument>(
     },
     role: {
       type: String,
-      enum: ['volunteer', 'ngo_coordinator', 'admin'],
+      enum: ['platform_admin', 'ngo_admin', 'ngo_staff', 'volunteer', 'donor', 'community_reporter',
+             // Legacy compat
+             'ngo_coordinator', 'admin'],
       default: 'volunteer',
     },
     avatar: { type: String },
     isVerified: { type: Boolean, default: false },
+    
+    // Multi-tenant
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization' },
+    
+    // Reputation & Gamification
+    reputationScore: { type: Number, default: 50, min: 0, max: 100 },
+    badges: [{ type: String }],
+    points: { type: Number, default: 0 },
+    
+    // Preferences
+    language: { type: String, default: 'en' },
   },
   {
     timestamps: true,
