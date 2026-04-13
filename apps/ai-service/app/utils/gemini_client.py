@@ -53,6 +53,25 @@ class GeminiClient:
             print(f"❌ Gemini generation error: {e}")
             return None
 
+    async def generate_json(self, prompt: str) -> Optional[dict]:
+        """Generate JSON from a prompt — auto-parses the response."""
+        result = await self.generate(prompt)
+        if not result:
+            return None
+        try:
+            cleaned = result.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("\n", 1)[1]
+            if cleaned.endswith("```"):
+                cleaned = cleaned.rsplit("```", 1)[0]
+            cleaned = cleaned.strip()
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:].strip()
+            return json.loads(cleaned)
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"⚠️ Failed to parse Gemini JSON: {e}")
+            return None
+
     async def extract_needs_from_text(self, text: str) -> dict:
         """
         Use Gemini to extract community needs from raw survey/report text.

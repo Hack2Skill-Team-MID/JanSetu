@@ -18,7 +18,8 @@ import {
   Trophy,
   Package,
   Heart,
-  IndianRupee
+  IndianRupee,
+  MessageSquare
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Manage Needs', href: '/dashboard/needs', icon: MapPin },
     { name: 'Process Surveys', href: '/dashboard/surveys', icon: FileText },
     { name: 'Resources', href: '/dashboard/resources', icon: Package },
+    { name: 'Donate', href: '/dashboard/donate', icon: Heart },
+    { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
     { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
     { name: 'Volunteers', href: '/dashboard/volunteers', icon: Users },
@@ -44,6 +47,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'My Portal', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Open Tasks', href: '/dashboard/tasks', icon: Briefcase },
     { name: 'Campaigns', href: '/dashboard/campaigns', icon: Target },
+    { name: 'Donate', href: '/dashboard/donate', icon: Heart },
+    { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'NGO Network', href: '/dashboard/network', icon: Globe },
     { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
     { name: 'My Profile', href: '/dashboard/profile', icon: Settings },

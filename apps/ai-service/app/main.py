@@ -21,12 +21,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import routers
-from app.routers import ingestion, matching
+from app.routers import ingestion, matching, intelligence
 
 app = FastAPI(
     title="JanSetu AI Service",
     description="AI-powered data processing and volunteer matching for JanSetu",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/ai/docs",
     redoc_url="/ai/redoc",
 )
@@ -43,6 +43,7 @@ app.add_middleware(
 # Include routers
 app.include_router(ingestion.router, prefix="/ai", tags=["Data Ingestion"])
 app.include_router(matching.router, prefix="/ai", tags=["Matching & Prioritization"])
+app.include_router(intelligence.router, prefix="/ai", tags=["Intelligence & Analytics"])
 
 
 @app.get("/ai/health")
