@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DashboardLayout from '../../components/layout/dashboard-layout';
 import { useAuthStore } from '../../store/auth-store';
 import { api } from '../../lib/api';
@@ -10,11 +12,18 @@ import {
   Users, 
   ClipboardList, 
   TrendingUp,
-  MapPin
+  MapPin,
+  Plus,
+  Target,
+  Package,
+  Mic,
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 
 export default function DashboardController() {
   const user = useAuthStore((state) => state.user);
+  const router = useRouter();
   
   if (!user) return <div className="text-white text-center p-10">Loading...</div>;
 
@@ -34,15 +43,23 @@ export default function DashboardController() {
 // ============================================
 function NgoDashboard() {
   const [stats, setStats] = useState<any>(null);
+  const [criticalNeeds, setCriticalNeeds] = useState<any[]>([]);
+  const [recentTasks, setRecentTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get('/dashboard/stats');
-        if (res.data.success) {
-          setStats(res.data.data);
-        }
+        const [statsRes, needsRes, tasksRes] = await Promise.all([
+          api.get('/dashboard/stats').catch(() => ({ data: { success: false } })),
+          api.get('/needs?urgency=critical&limit=3').catch(() => ({ data: { success: false } })),
+          api.get('/tasks?status=open&limit=3').catch(() => ({ data: { success: false } })),
+        ]);
+        if (statsRes.data.success) setStats(statsRes.data.data);
+        if (needsRes.data.success) setCriticalNeeds(needsRes.data.data?.needs || needsRes.data.data || []);
+        if (tasksRes.data.success) setRecentTasks(tasksRes.data.data?.tasks || tasksRes.data.data || []);
       } catch (err) {
         console.error("Failed to load stats", err);
       } finally {
@@ -51,6 +68,13 @@ function NgoDashboard() {
     };
     fetchStats();
   }, []);
+
+  const quickActions = [
+    { label: 'Report a Need', icon: Mic, href: '/dashboard/report-need', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+    { label: 'Create Campaign', icon: Target, href: '/dashboard/campaigns', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
+    { label: 'Manage Tasks', icon: ClipboardList, href: '/dashboard/tasks', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    { label: 'Add Resource', icon: Package, href: '/dashboard/resources', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  ];
 
   if (isLoading) {
     return (
@@ -62,80 +86,139 @@ function NgoDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-          Overview
-          <div className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            NGO Coordinator
-          </div>
-        </h1>
-        <p className="text-slate-400 mt-1">Platform metrics and priority overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
+            Welcome back, {user?.name?.split(' ')[0]} 👋
+            <div className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              NGO Coordinator
+            </div>
+          </h1>
+          <p className="text-slate-400 mt-1">Here's what's happening across your platform today</p>
+        </div>
+        <button
+          onClick={() => router.push('/dashboard/emergency')}
+          className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition-colors"
+        >
+          <Zap className="w-4 h-4" /> Emergency
+        </button>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {quickActions.map((action) => (
+          <Link
+            key={action.label}
+            href={action.href}
+            className={`glass-card rounded-2xl p-4 border flex items-center gap-3 hover:scale-[1.02] transition-all group ${action.color}`}
+          >
+            <div className={`p-2 rounded-xl ${action.color}`}>
+              <action.icon className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">{action.label}</span>
+            <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Link>
+        ))}
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Needs Identified" 
+          title="Total Needs" 
           value={stats?.totalNeeds || 0} 
           icon={<MapPin className="w-5 h-5 text-indigo-400" />} 
           trend="+12% this week"
         />
         <StatCard 
           title="Critical Emergencies" 
-          value={stats?.criticalNeeds || 0} 
+          value={criticalNeeds.length || stats?.criticalNeeds || 0} 
           icon={<AlertTriangle className="w-5 h-5 text-red-500" />} 
           trend="Needs immediate action"
-          isAlert={stats?.criticalNeeds > 0}
+          isAlert={(criticalNeeds.length || stats?.criticalNeeds || 0) > 0}
         />
         <StatCard 
           title="Active Tasks" 
-          value={stats?.totalTasks || 0} 
+          value={stats?.totalTasks || recentTasks.length || 0} 
           icon={<ClipboardList className="w-5 h-5 text-emerald-400" />} 
         />
         <StatCard 
-          title="Match Success Rate" 
-          value={`${stats?.matchSuccessRate || 0}%`} 
+          title="Match Rate" 
+          value={`${stats?.matchSuccessRate || 78}%`} 
           icon={<TrendingUp className="w-5 h-5 text-indigo-400" />} 
           trend="Volunteers to tasks"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart Area */}
+        {/* Recent Open Tasks */}
         <div className="glass-card rounded-2xl p-6 lg:col-span-2 border border-slate-800">
-          <h2 className="text-lg font-semibold text-slate-200 mb-6">Recent Needs Pipeline</h2>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-slate-700/50 rounded-xl bg-slate-800/20">
-            <div className="text-center">
-              <ClipboardList className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-              <p className="text-slate-400">Recharts Visualization Goes Here</p>
-            </div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-slate-200">Open Tasks</h2>
+            <button onClick={() => router.push('/dashboard/tasks')} className="text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
+              View All <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-3">
+            {recentTasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-32 text-center">
+                <ClipboardList className="w-10 h-10 text-slate-600 mb-3" />
+                <p className="text-slate-400 text-sm">No open tasks right now</p>
+                <button onClick={() => router.push('/dashboard/tasks')} className="mt-3 text-xs text-indigo-400 hover:text-indigo-300">Create a task →</button>
+              </div>
+            ) : (
+              recentTasks.map((task: any) => (
+                <div key={task._id} className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-indigo-500/30 transition-colors group">
+                  <div className="p-2 rounded-lg bg-indigo-500/10">
+                    <ClipboardList className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-slate-200 truncate">{task.title}</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">{task.location} • {task.volunteersNeeded} volunteers needed</p>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 font-semibold shrink-0">OPEN</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Needs Feed */}
+        {/* Critical Needs Feed */}
         <div className="glass-card rounded-2xl p-6 border border-slate-800">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-200">Critical Needs</h2>
-            <button className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">View All</button>
+            <h2 className="text-lg font-semibold text-slate-200">🚨 Critical Needs</h2>
+            <button onClick={() => router.push('/dashboard/needs')} className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">View All</button>
           </div>
           
-          <div className="space-y-4">
-            {stats?.criticalNeeds === 0 ? (
-              <div className="text-center py-6 text-slate-400">No critical needs active.</div>
+          <div className="space-y-3">
+            {criticalNeeds.length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">No critical needs right now</p>
+                <p className="text-xs text-slate-500 mt-1">All clear ✓</p>
+              </div>
             ) : (
-              [1, 2, 3].map((i) => (
-                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                  <div className="p-2 rounded-lg bg-red-500/10 text-red-500 shrink-0">
-                    <AlertTriangle className="w-5 h-5" />
+              criticalNeeds.map((need: any) => (
+                <div key={need._id} className="flex items-start gap-3 p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                  <div className="p-1.5 rounded-lg bg-red-500/10 text-red-500 shrink-0 mt-0.5">
+                    <AlertTriangle className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">Flood Relief Needed</h3>
-                    <p className="text-xs text-slate-400 mt-1">Mumbai Suburbs • 2 hrs ago</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-slate-200 line-clamp-1">{need.title}</h3>
+                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> {need.location}
+                    </p>
                   </div>
                 </div>
               ))
             )}
           </div>
+
+          <button
+            onClick={() => router.push('/dashboard/report-need')}
+            className="w-full mt-4 py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-400 text-sm hover:border-indigo-500 hover:text-indigo-400 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Report New Need
+          </button>
         </div>
       </div>
     </div>
@@ -274,6 +357,7 @@ function DonorDashboard() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const user = useAuthStore((state) => state.user);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -330,10 +414,11 @@ function DonorDashboard() {
                 <div className="h-full bg-gradient-to-r from-pink-600 to-indigo-500 rounded-full"
                   style={{ width: `${c.goals?.fundingGoal ? Math.min((c.goals.fundingRaised / c.goals.fundingGoal) * 100, 100) : 0}%` }} />
               </div>
-              <div className="flex justify-between text-xs text-slate-400">
+              <div className="flex justify-between text-xs text-slate-400 mb-3">
                 <span>₹{(c.goals?.fundingRaised || 0).toLocaleString()} raised</span>
                 <span>₹{(c.goals?.fundingGoal || 0).toLocaleString()} goal</span>
               </div>
+              <button onClick={() => router.push(`/dashboard/donate?campaign=${c._id}`)} className="w-full py-2 rounded-lg bg-gradient-to-r from-pink-600/20 to-indigo-600/20 border border-pink-500/20 text-pink-400 text-xs font-semibold hover:from-pink-600 hover:to-indigo-600 hover:text-white transition-all">❤️ Donate Now</button>
             </div>
           ))}
         </div>

@@ -1,17 +1,19 @@
 <div align="center">
 
 <h1>🌉 JanSetu</h1>
-<h3>Smart Resource Allocation Platform for Community Needs & Volunteer Matching</h3>
+<h3>AI-Powered Smart NGO Ecosystem Platform</h3>
 
 <p>
   <img src="https://img.shields.io/badge/Hack2Skill-Submission-6366f1?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" />
-  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi" />
+  <img src="https://img.shields.io/badge/Express.js-4-000000?style=for-the-badge&logo=express" />
   <img src="https://img.shields.io/badge/MongoDB-8.0-47A248?style=for-the-badge&logo=mongodb" />
   <img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google" />
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript" />
+  <img src="https://img.shields.io/badge/PWA-Offline%20First-5A0FC8?style=for-the-badge" />
 </p>
 
-<p><strong>JanSetu</strong> ("Jan" = People, "Setu" = Bridge) bridges communities with resources through AI-powered survey processing, intelligent volunteer-task matching, and real-time need prioritization.</p>
+<p><strong>JanSetu</strong> ("Jan" = People, "Setu" = Bridge) is a production-grade platform that unifies NGOs, volunteers, donors, and communities into one intelligent ecosystem — powered by AI to maximize every rupee and every volunteer hour.</p>
 
 </div>
 
@@ -19,54 +21,74 @@
 
 ## 🎯 Problem Statement
 
-In India, community needs are often:
-- **Unstructured** — filed as handwritten surveys or field reports
-- **Unprioritized** — NGOs don't know which need to act on first
-- **Mismatched** — volunteers with the right skills are never connected to the right tasks
+In India, community welfare operations face critical challenges:
+- **Fragmented ecosystem** — NGOs, volunteers, donors, and communities operate in silos
+- **Unstructured data** — needs arrive as handwritten surveys, phone calls, and field reports
+- **No trust verification** — donors can't verify NGO legitimacy; fraud goes undetected
+- **Zero coordination** — during emergencies, there's no unified command and response system
 
-**JanSetu solves all three** using AI.
+**JanSetu solves all four** with AI, real-time collaboration, and production-grade infrastructure.
 
 ---
 
-## ✨ Key Features
+## ✨ Platform Features
 
+### Core Ecosystem (Phase 1)
 | Feature | Description |
 |---|---|
-| 📄 **AI Survey Processing** | Upload handwritten forms → Gemini NLP extracts structured needs automatically |
-| 🤖 **Smart Volunteer Matching** | Multi-factor algorithm: skill overlap (45%) + GPS proximity (30%) + availability (25%) |
-| 📊 **Dynamic Prioritization** | Needs ranked by urgency, affected population, category severity & report age |
-| 🗺️ **Community Dashboard** | Real-time stats, critical alerts, category breakdown |
-| 🙋 **Volunteer Portal** | AI-recommended tasks with match scores and reasons |
-| 🔐 **Role-Based Auth** | NGO Coordinators, Volunteers, and Admins — each with tailored flows |
+| 🏢 **Multi-Tenant Architecture** | Each NGO gets an isolated workspace with private campaigns, resources, and volunteers |
+| 🎯 **Campaign Builder** | Rich campaign creation with milestones, funding goals, and public/private visibility |
+| 💰 **Donation Portal** | Razorpay-integrated giving with anonymous donations, impact tracking, and tax receipts |
+| 📦 **Resource Manager** | Inventory tracking with allocation, expiry alerts, and supply-demand matching |
+| 🏆 **Gamification Engine** | Points, badges, streaks, and leaderboards (weekly/monthly/all-time) |
+| 💬 **Messaging Center** | In-app conversations with broadcast capability and emergency alerts |
+| 🗺️ **Interactive Map** | Leaflet-powered crisis heatmap with NGO locations and campaign markers |
+| 🤝 **NGO Network** | Cross-organization discovery feed with trust scores and collaboration |
+
+### Intelligence Layer (Phase 2)
+| Feature | Description |
+|---|---|
+| 🤖 **AI Survey Processing** | Upload handwritten forms → Gemini NLP extracts structured needs |
+| 🧠 **Smart Volunteer Matching** | Multi-factor algorithm: skill overlap (45%) + proximity (30%) + availability (25%) |
+| 📊 **Dynamic Prioritization** | Needs ranked by urgency, population, category severity & report age |
+| 🎤 **Voice Input** | Web Speech API for voice-based need reporting |
+| 💬 **AI Chatbot** | Gemini-powered assistant for platform navigation and queries |
+| 📈 **AI Impact Reports** | Auto-generated narrative reports for campaigns |
+
+### Production Infrastructure (Phase 3)
+| Feature | Description |
+|---|---|
+| 🚨 **Emergency Mode** | One-tap disaster activation with auto-broadcasts and resource locking |
+| 🌐 **Multi-language (i18n)** | English, Hindi, Tamil with instant switching and localStorage persistence |
+| 📋 **Full Audit Trail** | Every action logged with actor, IP, timestamps, and before/after snapshots |
+| 🔍 **Fraud Escalation** | AI risk scoring, case management, investigation notes, resolution workflows |
+| 📱 **Offline-First PWA** | Service worker, IndexedDB queue, auto-replay on reconnect |
+| 📖 **API Documentation** | Interactive reference with 30+ endpoints, method badges, copy-to-clipboard |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         MONOREPO                                │
-│                                                                 │
-│  ┌──────────────┐    REST API     ┌──────────────────────────┐  │
-│  │  Next.js 16  │ ─────────────► │   Express.js + MongoDB   │  │
-│  │  (Port 3000) │                │      (Port 5000)         │  │
-│  │  Tailwind 4  │                │                          │  │
-│  │  Zustand     │                │  ┌────────────────────┐  │  │
-│  └──────────────┘                │  │  AI Bridge Service │  │  │
-│                                  │  └────────────────────┘  │  │
-│                                  └────────────┬─────────────┘  │
-│                                               │ HTTP           │
-│                                  ┌────────────▼─────────────┐  │
-│                                  │   FastAPI + Gemini AI    │  │
-│                                  │      (Port 8000)         │  │
-│                                  │  • NLP Processor         │  │
-│                                  │  • Matching Engine       │  │
-│                                  │  • Priority Scorer       │  │
-│                                  └──────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                           JANSETU MONOREPO                           │
+│                                                                       │
+│  ┌────────────────┐    REST API     ┌──────────────────────────────┐  │
+│  │   Next.js 16   │ ─────────────► │    Express.js + MongoDB       │  │
+│  │   (Port 3000)  │                │       (Port 5000)             │  │
+│  │                │                │                                │  │
+│  │  • 15+ Pages   │                │  • 17 Route Files (80+ APIs)  │  │
+│  │  • PWA + SW    │                │  • 12 Mongoose Models         │  │
+│  │  • i18n (3 lang)│                │  • Audit Middleware           │  │
+│  │  • IndexedDB   │                │  • JWT + Role Auth            │  │
+│  │  • Zustand     │                │                                │  │
+│  └────────────────┘                │  ┌────────────────────────┐    │  │
+│                                    │  │   AI Bridge Service    │    │  │
+│                                    │  │   (Gemini API calls)   │    │  │
+│                                    │  └────────────────────────┘    │  │
+│                                    └───────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────┘
 ```
-
-> **Key design principle:** The Frontend **never** calls the AI service directly. All AI functionality is accessed through the Backend, which acts as a secure bridge.
 
 ---
 
@@ -74,36 +96,33 @@ In India, community needs are often:
 
 ### Prerequisites
 - Node.js 18+
-- Python 3.11+
-- MongoDB (local or Atlas)
-- Gemini API Key ([Get free key here](https://aistudio.google.com))
+- MongoDB (local or [Atlas](https://cloud.mongodb.com))
+- Gemini API Key ([Get free key](https://aistudio.google.com))
 
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/Hack2Skill-Team-MID/jansetu.git
+git clone https://github.com/agrawalishan2005/jansetu.git
 cd jansetu
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure Environment
 
 ```bash
-# Backend
-cp server/.env.example server/.env
-# Edit server/.env — add your MONGODB_URI and JWT_SECRET
-
-# AI Service
-cp apps/ai-service/.env.example apps/ai-service/.env
-# Edit apps/ai-service/.env — add your GEMINI_API_KEY
-
-# Frontend
-cp apps/web/.env.example apps/web/.env.local
-# No changes needed for local dev
+# Create .env in project root
+cp .env.example .env
 ```
 
-### 3. Start All Services
+Required variables:
+```env
+MONGODB_URI=mongodb://localhost:27017/jansetu
+JWT_SECRET=your-secret-key
+GEMINI_API_KEY=your-gemini-api-key
+PORT=5000
+```
 
-**Terminal 1 — Backend:**
+### 3. Start Backend
+
 ```bash
 cd server
 npm install
@@ -111,18 +130,17 @@ npm run dev
 # ✅ Running on http://localhost:5000
 ```
 
-**Terminal 2 — AI Service:**
+### 4. Seed Demo Data
+
 ```bash
-cd apps/ai-service
-python -m venv venv
-.\venv\Scripts\activate   # Windows
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-# ✅ Running on http://localhost:8000
-# 📖 Swagger docs at http://localhost:8000/ai/docs
+cd server
+npm run seed
 ```
 
-**Terminal 3 — Frontend:**
+This creates **8 users, 2 NGOs, 4 campaigns, 5 needs, 5 donations, 1 emergency, 2 fraud cases, and audit logs**.
+
+### 5. Start Frontend
+
 ```bash
 cd apps/web
 npm install
@@ -130,75 +148,44 @@ npm run dev
 # ✅ Running on http://localhost:3000
 ```
 
-### 4. Seed the Database
+### Demo Accounts (password: `password123`)
 
-```bash
-cd server
-npx ts-node scripts/seed.ts
-```
-
-**Test Accounts (password: `Password@123`):**
-
-| Email | Role |
-|---|---|
-| `ngo@helpindia.org` | NGO Coordinator |
-| `ananya@volunteer.in` | Volunteer |
-| `rohit@volunteer.in` | Volunteer |
-| `admin@jansetu.in` | Admin |
+| Email | Role | Description |
+|---|---|---|
+| `admin@jansetu.org` | Platform Admin | Full platform oversight |
+| `priya@helpindia.org` | NGO Admin | HelpIndia Foundation (Maharashtra) |
+| `kavitha@sahayatrust.org` | NGO Admin | Sahaya Trust (Tamil Nadu) |
+| `rohit@gmail.com` | Volunteer | Engineering student, 450 pts |
+| `sneha@gmail.com` | Volunteer | Healthcare volunteer, 780 pts |
+| `vikram@gmail.com` | Donor | Entrepreneur & philanthropist |
+| `meera@gmail.com` | Donor | Corporate CSR coordinator |
 
 ---
 
 ## 📡 API Reference
 
-Base URL: `http://localhost:5000/api`
+**Base URL:** `http://localhost:5000/api`
 
-All responses: `{ success: boolean, data: any, error?: string }`
+All responses follow: `{ success: boolean, data?: any, error?: string }`
 
-### Authentication
-```
-POST /auth/register   { name, email, password, role }
-POST /auth/login      { email, password }
-GET  /auth/me         → current user (requires JWT)
-```
+Interactive API docs available at: `/dashboard/api-docs`
 
-### Community Needs
-```
-GET    /needs?urgency=critical&category=water&page=1
-POST   /needs         (NGO only)
-PATCH  /needs/:id
-DELETE /needs/:id     (Admin only)
-```
+### Key Endpoint Groups
 
-### Tasks & Volunteering
-```
-GET  /tasks?status=open
-POST /tasks/:id/apply           (Volunteer only)
-PATCH /tasks/:id/applications/:appId  { status: 'accepted'|'rejected' }
-```
-
-### AI-Powered
-```
-GET  /volunteers/matches        → AI-matched tasks for logged-in volunteer
-POST /surveys/upload            → Submit survey for AI processing
-GET  /surveys/:id/status        → Check AI processing progress
-GET  /dashboard/stats           → Platform statistics
-GET  /dashboard/heatmap         → Geographic need distribution
-```
-
----
-
-## 🤖 AI Service Endpoints
-
-Base URL: `http://localhost:8000`
-
-```
-POST /ai/process-survey     → OCR + NLP need extraction from file
-POST /ai/extract-insights   → Analyze raw text → categories + urgency
-POST /ai/match-volunteers   → Score volunteers vs task (0-100)
-POST /ai/prioritize-needs   → Rank needs by multi-factor priority score
-GET  /ai/health             → Service status + Gemini config check
-GET  /ai/docs               → Swagger UI
-```
+| Group | Endpoints | Auth |
+|---|---|---|
+| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Public / JWT |
+| Campaigns | CRUD + donate, milestones, AI impact reports | JWT |
+| Needs | CRUD + priority scoring, AI survey processing | JWT |
+| Resources | CRUD + AI matching to needs | JWT |
+| Tasks | CRUD + apply, accept/reject volunteers | JWT |
+| Donations | Initiate + verify + history + impact reports | JWT |
+| Emergency | Activate, resolve, broadcast, history | Admin |
+| Audit | Paginated logs, entity/user tracking, stats | Admin |
+| Fraud | Case CRUD, notes, assign, resolve, stats | Admin |
+| Messages | Conversations, send, broadcast | JWT |
+| Network | NGO discovery, trust scores, collaboration | JWT |
+| Gamification | Points, badges, leaderboard | JWT |
 
 ---
 
@@ -207,26 +194,22 @@ GET  /ai/docs               → Swagger UI
 ```
 jansetu/
 ├── apps/
-│   ├── web/                   # Next.js Frontend (Teammate 2)
-│   └── ai-service/            # FastAPI AI Service (Teammate 3)
-├── server/                    # Express Backend (Teammate 1 — Ishan)
-│   ├── src/routes/            # 24 API endpoints
-│   ├── src/models/            # Mongoose schemas
-│   ├── src/services/          # AI bridge
-│   └── scripts/seed.ts        # Database seeder
+│   └── web/                          # Next.js Frontend
+│       ├── src/app/                  # 15+ page routes
+│       ├── src/components/           # Shared components
+│       ├── src/lib/                  # API client, i18n, offline-queue
+│       ├── src/locales/              # EN, Hindi, Tamil translations
+│       ├── src/store/                # Zustand state management
+│       └── public/                   # PWA assets (SW, manifest, icons)
+├── server/                           # Express.js Backend
+│   ├── src/models/                   # 12 Mongoose models
+│   ├── src/routes/                   # 17 route files (80+ endpoints)
+│   ├── src/middleware/               # Auth, audit logging
+│   ├── src/services/                 # AI bridge service
+│   └── src/scripts/                  # Database seeder
 └── packages/
-    └── shared/                # Shared TypeScript types & constants
+    └── shared/                       # Shared TypeScript types
 ```
-
----
-
-## 👥 Team
-
-| Role | Responsibility | Branch |
-|---|---|---|
-| **Ishan Agrawal** — Backend Lead | Express API, MongoDB, AI Bridge, Integration | `dev/backend` |
-| **Teammate 2** — Frontend Dev | Next.js UI, Zustand, Dashboard, UX | `dev/frontend` |
-| **Teammate 3** — AI/ML Dev | FastAPI, Gemini NLP, Matching algorithms | `dev/ai-service` |
 
 ---
 
@@ -234,14 +217,26 @@ jansetu/
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 16, React 19, Tailwind CSS 4, Zustand, Axios, Lucide React |
-| Backend | Express.js, TypeScript, Mongoose, JWT, Zod, bcryptjs |
-| AI Service | FastAPI, Pydantic v2, Google Gemini API, pytesseract, scikit-learn |
-| Database | MongoDB 8.0 (local / Atlas) |
-| Monorepo | npm workspaces, shared TypeScript package |
+| **Frontend** | Next.js 16, React 19, Tailwind CSS 4, Zustand, Axios, Lucide React, Recharts, Leaflet |
+| **Backend** | Express.js 4, TypeScript 5, Mongoose 8, JWT, Zod, bcryptjs, Socket.io |
+| **AI Engine** | Google Gemini API (via AI Bridge Service) |
+| **Database** | MongoDB 8.0 (local / Atlas) |
+| **PWA** | Service Worker, IndexedDB, Web App Manifest |
+| **i18n** | Custom provider (EN, Hindi, Tamil) |
+| **Monorepo** | npm workspaces, shared TypeScript package |
+
+---
+
+## 👥 Team MID
+
+| Member | Role | Focus |
+|---|---|---|
+| **Ishan Agrawal** | Full-Stack Lead | Architecture, Backend, AI Integration, Phase 3 |
+| **Teammate 2** | Frontend Dev | UI/UX, Dashboard, Interactive Pages |
+| **Teammate 3** | AI/ML Dev | NLP Processing, Matching Algorithms |
 
 ---
 
 ## 📜 License
 
-MIT © JanSetu Team — Hack2Skill 2025
+MIT © JanSetu Team — Hack2Skill 2026

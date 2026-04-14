@@ -206,21 +206,83 @@ class AiBridgeService {
     }
   }
 
-  // AI Chatbot
+  // AI Chatbot — calls Gemini REST API directly (no Python dependency)
   async chatbot(message: string, context: string, role: string): Promise<{ response: string; suggestions: string[] }> {
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    // If no API key, return a helpful static response
+    if (!apiKey) {
+      return this.fallbackChatbot(message, role);
+    }
+
     try {
-      const response = await fetch(`${this.baseUrl}/ai/chatbot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, context, role }),
-      });
-      if (!response.ok) throw new Error(`AI ${response.status}`);
-      const data = await response.json();
-      return data.data || { response: 'AI service unavailable', suggestions: [] };
+      const systemPrompt = `You are JanSetu AI Assistant — a helpful, concise assistant for an NGO ecosystem management platform called JanSetu.
+      
+The platform helps NGOs manage campaigns, track donations, coordinate volunteers, manage community needs, and respond to emergencies.
+
+The user's context: ${context}
+The user's role: ${role}
+
+Guidelines:
+- Be concise but informative (2-4 paragraphs max)
+- Give actionable advice specific to their role
+- Reference JanSetu features when relevant (campaigns, donations, leaderboard, emergency mode, etc.)
+- Use bullet points for lists
+- Be encouraging and professional`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              { role: 'user', parts: [{ text: `${systemPrompt}\n\nUser message: ${message}` }] }
+            ],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Gemini API error:', response.status);
+        return this.fallbackChatbot(message, role);
+      }
+
+      const data = await response.json() as any;
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not generate a response. Please try again.';
+      
+      return { response: text, suggestions: [] };
     } catch (error: any) {
       console.error('❌ AI chatbot error:', error.message);
-      return { response: 'AI assistant is currently unavailable. Please try again later.', suggestions: [] };
+      return this.fallbackChatbot(message, role);
     }
+  }
+
+  // Fallback chatbot when Gemini API key is not available
+  private fallbackChatbot(message: string, role: string): { response: string; suggestions: string[] } {
+    const msg = message.toLowerCase();
+    
+    if (msg.includes('campaign')) {
+      return { response: "**Creating a Campaign:**\n\n1. Go to **Dashboard → Campaigns**\n2. Click **Create Campaign**\n3. Fill in title, description, category, funding goal, and location\n4. Add milestones to track progress\n5. Set visibility to **Public** to receive donations\n\n💡 **Tip:** Campaigns with clear milestones and photos receive 3x more donations!", suggestions: ['How to add milestones?', 'How to promote my campaign?'] };
+    }
+    if (msg.includes('trust') || msg.includes('score')) {
+      return { response: "**Improving Your Trust Score:**\n\n• ✅ Complete your organization profile (10 pts)\n• 📊 Maintain campaign milestones on schedule (15 pts)\n• 💰 Show transparent donation usage (20 pts)\n• 🤝 Get verified by platform admin (25 pts)\n• 📋 Keep audit trail clean — no fraud flags (30 pts)\n\nYour trust tier upgrades: **Bronze → Silver → Gold → Platinum** as your score increases.", suggestions: ['What is my current score?', 'How to get verified?'] };
+    }
+    if (msg.includes('volunteer') || msg.includes('recruit')) {
+      return { response: "**Volunteer Recruitment Tips:**\n\n1. Post tasks with **clear descriptions** and expected time commitment\n2. Enable **AI matching** — volunteers get notified when their skills match your tasks\n3. Use the **Leaderboard** to highlight top contributors\n4. Award **badges** for completed tasks to boost engagement\n5. Send **broadcast messages** for urgent needs\n\n🎯 Volunteers with gamification earn 2x more engagement!", suggestions: ['How does AI matching work?', 'How to create tasks?'] };
+    }
+    if (msg.includes('donat') || msg.includes('fund')) {
+      return { response: "**Donation Management:**\n\n• Donors can give to specific **campaigns** or **organizations**\n• Support **anonymous donations** for privacy\n• Each donation generates an **impact report**\n• View all donations under **Dashboard → Donate**\n• Recurring donations available for sustained support\n\n💡 Campaigns with progress updates receive 40% more recurring donors!", suggestions: ['How to track donations?', 'How to issue receipts?'] };
+    }
+    if (msg.includes('emergency') || msg.includes('disaster')) {
+      return { response: "**Emergency Mode:**\n\n🚨 Activate from **Dashboard → Emergency**\n\nWhen activated:\n• Broadcasts alert to all organization members\n• Creates a **Critical** priority community need\n• Appears as a red banner across all dashboards\n• Resources get priority-locked for the emergency\n\nOnly **NGO Admins** and **Platform Admins** can declare emergencies.", suggestions: ['How to resolve an emergency?', 'How to send broadcasts?'] };
+    }
+    
+    return { 
+      response: `I'm the **JanSetu AI Assistant**! Here's what I can help you with:\n\n• 🎯 **Campaign creation** and management\n• 📊 **Trust score** improvement strategies\n• 👥 **Volunteer recruitment** and matching\n• 💰 **Donation tracking** and impact reports\n• 🚨 **Emergency mode** activation\n• 🗺️ **Resource allocation** guidance\n\nTry asking me about any of these topics!`, 
+      suggestions: ['How to create a campaign?', 'How to improve trust score?', 'How to recruit volunteers?'] 
+    };
   }
 
   // Generate Impact Report
@@ -232,7 +294,7 @@ class AiBridgeService {
         body: JSON.stringify(campaignData),
       });
       if (!response.ok) throw new Error(`AI ${response.status}`);
-      const data = await response.json();
+      const data = (await response.json()) as { data?: any };
       return data.data;
     } catch (error: any) {
       console.error('❌ AI impact report error:', error.message);
@@ -249,7 +311,7 @@ class AiBridgeService {
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error(`AI ${response.status}`);
-      const result = await response.json();
+      const result = (await response.json()) as { data?: any };
       return result.data;
     } catch (error: any) {
       console.error('❌ AI fraud detection error:', error.message);

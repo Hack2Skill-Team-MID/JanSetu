@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { useAuthStore } from '../../../store/auth-store';
@@ -10,9 +11,19 @@ import {
 } from 'lucide-react';
 
 export default function DonatePortalPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <DonatePortalInner />
+    </Suspense>
+  );
+}
+
+function DonatePortalInner() {
+  const searchParams = useSearchParams();
+  const preselectedCampaign = searchParams.get('campaign');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [myDonations, setMyDonations] = useState<any>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(preselectedCampaign);
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);

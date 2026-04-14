@@ -35,7 +35,7 @@ export default function MapPage() {
     const fetchMapData = async () => {
       try {
         const [needsRes, campaignsRes, ngosRes] = await Promise.all([
-          api.get('/community-needs'),
+          api.get('/needs'),
           api.get('/campaigns'),
           api.get('/network/ngos'),
         ]);

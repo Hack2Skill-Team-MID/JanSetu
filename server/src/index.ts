@@ -20,6 +20,9 @@ import messageRoutes from './routes/messages.routes';
 import gamificationRoutes from './routes/gamification.routes';
 import networkRoutes from './routes/network.routes';
 import aiBridgeRoutes from './routes/ai-bridge.routes';
+import emergencyRoutes from './routes/emergency.routes';
+import auditRoutes from './routes/audit.routes';
+import fraudRoutes from './routes/fraud.routes';
 
 dotenv.config({ path: '../.env' });
 
@@ -57,6 +60,9 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/network', networkRoutes);
 app.use('/api/ai-bridge', aiBridgeRoutes);
+app.use('/api/emergency', emergencyRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/fraud', fraudRoutes);
 
 // Error handler (must be after routes)
 app.use(errorHandler);

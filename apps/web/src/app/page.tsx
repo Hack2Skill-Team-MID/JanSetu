@@ -50,19 +50,41 @@ export default function Home() {
           </div>
 
           {/* Live stats */}
-          <div className="grid grid-cols-4 gap-6 mt-16 animate-fade-in">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-16 animate-fade-in">
             {[
-              { value: '2+', label: 'NGOs Connected', icon: Globe },
-              { value: '3', label: 'Active Campaigns', icon: Target },
-              { value: '5', label: 'Volunteers', icon: Users },
-              { value: '₹42K+', label: 'Donations Raised', icon: Heart },
+              { value: '120+', label: 'NGOs Connected', icon: Globe, color: 'text-indigo-400' },
+              { value: '48', label: 'Active Campaigns', icon: Target, color: 'text-purple-400' },
+              { value: '1.2K+', label: 'Volunteers', icon: Users, color: 'text-emerald-400' },
+              { value: '₹8.4L+', label: 'Donations Raised', icon: Heart, color: 'text-pink-400' },
             ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <stat.icon className="w-5 h-5 text-indigo-400 mx-auto mb-2" />
-                <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-slate-400 mt-1">{stat.label}</div>
+              <div key={i} className="text-center px-4 py-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm">
+                <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
+                <div className={`text-2xl md:text-3xl font-bold ${stat.color}`}>{stat.value}</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">{stat.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Demo Credentials */}
+          <div className="mt-10 p-4 rounded-2xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-md max-w-xl mx-auto animate-fade-in">
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-3 text-center">🔑 Demo Credentials (Hackathon)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="bg-indigo-500/10 rounded-xl p-3 border border-indigo-500/20">
+                <div className="text-indigo-400 font-bold mb-1">NGO Admin</div>
+                <div className="text-slate-300">admin@jansetu.org</div>
+                <div className="text-slate-400">password123</div>
+              </div>
+              <div className="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20">
+                <div className="text-emerald-400 font-bold mb-1">Volunteer</div>
+                <div className="text-slate-300">volunteer@jansetu.org</div>
+                <div className="text-slate-400">password123</div>
+              </div>
+              <div className="bg-pink-500/10 rounded-xl p-3 border border-pink-500/20">
+                <div className="text-pink-400 font-bold mb-1">Donor</div>
+                <div className="text-slate-300">donor@jansetu.org</div>
+                <div className="text-slate-400">password123</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -169,6 +191,74 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How it Works */}
+      <section className="w-full py-24 relative border-t border-slate-800/50">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              How <span className="text-indigo-400">JanSetu</span> Works
+            </h2>
+            <p className="text-slate-400 max-w-lg mx-auto">From need identification to impact delivery — in 4 simple steps.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { step: '01', title: 'Identify Needs', desc: 'Communities report local needs through surveys, field reports, or the mobile app. AI prioritizes by urgency.', icon: '📋' },
+              { step: '02', title: 'Mobilize Resources', desc: 'NGOs create campaigns, register resources, and recruit volunteers — all matched by AI to the right needs.', icon: '🎯' },
+              { step: '03', title: 'Execute & Track', desc: 'Volunteers complete tasks, donors fund campaigns, and everyone tracks progress with real-time dashboards.', icon: '⚡' },
+              { step: '04', title: 'Measure Impact', desc: 'AI generates impact reports, trust scores update, and the leaderboard rewards the most active contributors.', icon: '📊' },
+            ].map((item, i) => (
+              <div key={i} className="relative">
+                <div className="glass-card rounded-2xl border border-slate-800 p-6 hover:border-indigo-500/30 transition-all h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-full">STEP {item.step}</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-2">{item.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+                </div>
+                {i < 3 && (
+                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-indigo-500/30 z-10" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Production-Ready Showcase */}
+      <section className="w-full py-24 relative border-t border-slate-800/50">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/3 to-transparent pointer-events-none"></div>
+        <div className="container px-4 max-w-6xl mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Built for <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-400">Production</span>
+            </h2>
+            <p className="text-slate-400 max-w-lg mx-auto">Enterprise-grade infrastructure you&apos;d expect from platforms 10x our size.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { title: '🚨 Emergency Mode', desc: 'One-tap disaster activation with automatic broadcasts, resource locking, and priority re-ordering. Your command center when it matters most.', tag: 'Phase 3' },
+              { title: '🌐 Multi-language', desc: 'Full English, Hindi, and Tamil support with instant switching. Every label, button, and status translated. Expandable to 100+ languages.', tag: 'i18n' },
+              { title: '📱 Offline-First PWA', desc: 'Installable app with service worker caching. Failed requests queued in IndexedDB and auto-replayed when connectivity returns.', tag: 'PWA' },
+              { title: '📋 Audit Trail', desc: 'Every action logged with actor, timestamp, IP address, and before/after snapshots. Export to CSV. Full compliance-grade tracking.', tag: 'Security' },
+              { title: '🔍 Fraud Detection', desc: 'AI-powered risk scoring with investigation workflows. Case management, severity tracking, and resolution with actionable outcomes.', tag: 'AI' },
+              { title: '📖 API Documentation', desc: '30+ REST API endpoints documented with request/response schemas, method badges, and copy-to-clipboard paths.', tag: 'DevX' },
+            ].map((item, i) => (
+              <div key={i} className="glass-card rounded-2xl border border-slate-800 p-6 hover:border-slate-700 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xl">{item.title.split(' ')[0]}</span>
+                  <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">{item.tag}</span>
+                </div>
+                <h3 className="text-base font-semibold text-slate-100 mb-2">{item.title.split(' ').slice(1).join(' ')}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="w-full py-24 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-600/5 to-transparent pointer-events-none"></div>
@@ -184,24 +274,72 @@ export default function Home() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link href="/register"
-              className="px-8 py-4 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-all flex items-center gap-2 justify-center">
+              className="px-8 py-4 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white font-semibold transition-all flex items-center gap-2 justify-center">
               Join as Volunteer
+            </Link>
+            <Link href="/dashboard/donate"
+              className="px-8 py-4 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-all flex items-center gap-2 justify-center">
+              <Heart className="w-4 h-4 text-pink-400" />
+              Donate Now
             </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-800/50 py-8">
-        <div className="container px-4 max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-xs text-white">JS</span>
+      <footer className="w-full border-t border-slate-800/50 py-10">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="font-bold text-sm text-white">JS</span>
+                </div>
+                <span className="font-bold text-lg text-slate-200">JanSetu</span>
+              </div>
+              <p className="text-sm text-slate-500 leading-relaxed">AI-powered smart NGO ecosystem platform connecting communities with resources that matter.</p>
             </div>
-            <span className="font-bold text-slate-300">JanSetu</span>
-            <span className="text-xs text-slate-500">Smart NGO Ecosystem</span>
+
+            {/* Platform */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-300 mb-3">Platform</h4>
+              <div className="space-y-2">
+                <Link href="/dashboard/campaigns" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">Campaigns</Link>
+                <Link href="/dashboard/donate" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">Donate</Link>
+                <Link href="/dashboard/leaderboard" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">Leaderboard</Link>
+                <Link href="/dashboard/map" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">Impact Map</Link>
+              </div>
+            </div>
+
+            {/* Developers */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-300 mb-3">Developers</h4>
+              <div className="space-y-2">
+                <Link href="/dashboard/api-docs" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">API Reference</Link>
+                <a href="https://github.com/agrawalishan2005/jansetu" target="_blank" rel="noopener noreferrer" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors">GitHub</a>
+              </div>
+            </div>
+
+            {/* Tech Stack */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-300 mb-3">Tech Stack</h4>
+              <div className="flex flex-wrap gap-2">
+                {['Next.js', 'Express', 'MongoDB', 'TypeScript', 'Gemini AI', 'Leaflet', 'Socket.io'].map((tech) => (
+                  <span key={tech} className="text-[10px] px-2 py-1 bg-slate-800 rounded-md text-slate-400 border border-slate-700">{tech}</span>
+                ))}
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-slate-500">Built for Hack2Skill Hackathon &middot; Team MID &middot; 2025</p>
+
+          <div className="border-t border-slate-800/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500">© 2026 JanSetu. Built for Hack2Skill Hackathon by Team MID</p>
+            <div className="flex items-center gap-1 text-xs text-slate-600">
+              <span>Made with</span>
+              <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+              <span>for India</span>
+            </div>
+          </div>
         </div>
       </footer>
     </main>

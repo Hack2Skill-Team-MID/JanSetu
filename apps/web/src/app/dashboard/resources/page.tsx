@@ -6,7 +6,7 @@ import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { useAuthStore } from '../../../store/auth-store';
 import { 
   Package, AlertTriangle, Plus, Truck, Clock, 
-  Share2, ChevronDown 
+  Share2, X
 } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -25,25 +25,49 @@ export default function ResourcesPage() {
   const [resources, setResources] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', category: 'food', quantity: '', unit: 'kg', description: '' });
   const user = useAuthStore((s) => s.user);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resData, alertData] = await Promise.all([
-          api.get('/resources'),
-          api.get('/resources/alerts'),
-        ]);
-        if (resData.data.success) setResources(resData.data.data);
-        if (alertData.data.success) setAlerts(alertData.data.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    try {
+      const [resData, alertData] = await Promise.all([
+        api.get('/resources'),
+        api.get('/resources/alerts').catch(() => ({ data: { success: false } })),
+      ]);
+      if (resData.data.success) setResources(resData.data.data);
+      if (alertData.data.success) setAlerts(alertData.data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const handleAdd = async () => {
+    if (!addForm.name || !addForm.quantity) return;
+    setAdding(true);
+    try {
+      await api.post('/resources', {
+        name: addForm.name,
+        category: addForm.category,
+        quantity: parseInt(addForm.quantity),
+        unit: addForm.unit,
+        description: addForm.description,
+        availableForSharing: false,
+      });
+      setShowAdd(false);
+      setAddForm({ name: '', category: 'food', quantity: '', unit: 'kg', description: '' });
+      fetchData();
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Failed to add resource');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -56,7 +80,7 @@ export default function ResourcesPage() {
             </h1>
             <p className="text-slate-400 mt-1">Track, allocate, and share resources across campaigns</p>
           </div>
-          <button className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+          <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" /> Add Resource
           </button>
         </div>
@@ -141,6 +165,35 @@ export default function ResourcesPage() {
           </div>
         )}
       </div>
+
+      {/* Add Resource Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
+          <div className="glass-card rounded-2xl border border-slate-700 p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2"><Package className="w-5 h-5 text-indigo-400" /> Add Resource</h2>
+              <button onClick={() => setShowAdd(false)} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400"><X className="w-4 h-4" /></button>
+            </div>
+            <input value={addForm.name} onChange={e => setAddForm(p => ({...p, name: e.target.value}))} placeholder="Resource name (e.g. Rice bags)" className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+            <div className="grid grid-cols-2 gap-3">
+              <select value={addForm.category} onChange={e => setAddForm(p => ({...p, category: e.target.value}))} className="px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none">
+                {['food','medicine','clothing','shelter','equipment','vehicle','funds','other'].map(c => <option key={c} value={c}>{CATEGORY_ICONS[c]} {c}</option>)}
+              </select>
+              <div className="flex gap-2">
+                <input value={addForm.quantity} onChange={e => setAddForm(p => ({...p, quantity: e.target.value}))} type="number" placeholder="Qty" className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+                <input value={addForm.unit} onChange={e => setAddForm(p => ({...p, unit: e.target.value}))} placeholder="Unit" className="w-20 px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+              </div>
+            </div>
+            <textarea value={addForm.description} onChange={e => setAddForm(p => ({...p, description: e.target.value}))} placeholder="Description (optional)" rows={2} className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none resize-none" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium transition-colors">Cancel</button>
+              <button onClick={handleAdd} disabled={adding || !addForm.name} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold disabled:opacity-40 transition-colors">
+                {adding ? 'Adding...' : 'Add Resource'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

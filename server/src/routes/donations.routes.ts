@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import Donation from '../models/Donation';
 import Campaign from '../models/Campaign';
 import Organization from '../models/Organization';
-import { protect as authMiddleware } from '../middleware/auth';
+import { protect as authMiddleware, AuthRequest } from '../middleware/auth';
+import { createAuditEntry } from '../middleware/audit';
 import crypto from 'crypto';
 
 const router = Router();
@@ -47,9 +48,17 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
         razorpayOrderId: mockOrderId,
         amount,
         currency: 'INR',
-        // In production: include Razorpay key for frontend checkout
         razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_demo',
       },
+    });
+
+    await createAuditEntry({
+      action: 'donation',
+      entity: 'donation',
+      entityId: String(donation._id),
+      description: `Donation initiated: ₹${amount}${campaignId ? ' for campaign' : ''}`,
+      after: { amount, type: type || 'one_time', isAnonymous },
+      req: req as AuthRequest,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

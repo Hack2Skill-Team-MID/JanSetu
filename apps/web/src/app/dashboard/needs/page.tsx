@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { api } from '../../../lib/api';
-import { MapPin, AlertTriangle, Clock, Users, Plus, Filter } from 'lucide-react';
+import { MapPin, AlertTriangle, Clock, Users, Plus, X } from 'lucide-react';
 
 const URGENCY_STYLES: Record<string, string> = {
   critical: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -19,9 +20,11 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export default function NeedsPage() {
+  const router = useRouter();
   const [needs, setNeeds] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [selectedNeed, setSelectedNeed] = useState<any>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -45,7 +48,7 @@ export default function NeedsPage() {
             <h1 className="text-2xl font-bold text-slate-100">Community Needs</h1>
             <p className="text-slate-400 mt-1">AI-prioritized needs from field surveys across India</p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all text-sm shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+          <button onClick={() => router.push('/dashboard/report-need')} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all text-sm shadow-[0_0_15px_rgba(79,70,229,0.3)]">
             <Plus className="w-4 h-4" /> Report New Need
           </button>
         </div>
@@ -112,10 +115,10 @@ export default function NeedsPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors">
+                  <button onClick={() => router.push('/dashboard/tasks')} className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors">
                     Create Task
                   </button>
-                  <button className="px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors border border-slate-600/50">
+                  <button onClick={() => setSelectedNeed(need)} className="px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors border border-slate-600/50">
                     View Details
                   </button>
                 </div>
@@ -124,6 +127,39 @@ export default function NeedsPage() {
           </div>
         )}
       </div>
+
+      {/* Need Detail Modal */}
+      {selectedNeed && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setSelectedNeed(null)}>
+          <div className="glass-card rounded-2xl border border-slate-700 p-6 w-full max-w-lg space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{CATEGORY_ICONS[selectedNeed.category] || '📋'}</span>
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border capitalize ${URGENCY_STYLES[selectedNeed.urgency] || 'bg-slate-700 text-slate-300 border-slate-600'}`}>{selectedNeed.urgency}</span>
+              </div>
+              <button onClick={() => setSelectedNeed(null)} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 transition-colors"><X className="w-4 h-4" /></button>
+            </div>
+            <h2 className="text-lg font-bold text-slate-100">{selectedNeed.title}</h2>
+            <p className="text-sm text-slate-300 leading-relaxed">{selectedNeed.description}</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-slate-800/50 rounded-xl p-3">
+                <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Location</div>
+                <div className="text-slate-200 font-medium">{selectedNeed.location}</div>
+              </div>
+              {selectedNeed.affectedPopulation && (
+                <div className="bg-slate-800/50 rounded-xl p-3">
+                  <div className="text-xs text-slate-400 mb-1 flex items-center gap-1"><Users className="w-3 h-3" /> Affected</div>
+                  <div className="text-slate-200 font-medium">{selectedNeed.affectedPopulation.toLocaleString()} people</div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => { setSelectedNeed(null); router.push('/dashboard/report-need'); }} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">Report Similar</button>
+              <button onClick={() => setSelectedNeed(null)} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

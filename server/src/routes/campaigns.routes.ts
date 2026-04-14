@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import Campaign from '../models/Campaign';
-import { protect as authMiddleware } from '../middleware/auth';
+import { protect as authMiddleware, AuthRequest } from '../middleware/auth';
 import { aiBridgeService } from '../services/ai-bridge.service';
+import { createAuditEntry } from '../middleware/audit';
 
 const router = Router();
 
@@ -19,6 +20,15 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
       ...req.body,
       organizationId: user.organizationId,
       createdBy: user._id,
+    });
+
+    await createAuditEntry({
+      action: 'create',
+      entity: 'campaign',
+      entityId: String(campaign._id),
+      description: `Campaign created: ${campaign.title}`,
+      after: { title: campaign.title, category: campaign.category },
+      req: req as AuthRequest,
     });
 
     res.status(201).json({ success: true, data: campaign });
@@ -84,6 +94,16 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const campaign = await Campaign.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
     if (!campaign) return res.status(404).json({ success: false, error: 'Campaign not found' });
+
+    await createAuditEntry({
+      action: 'update',
+      entity: 'campaign',
+      entityId: String(req.params.id),
+      description: `Campaign updated: ${campaign.title}`,
+      after: req.body,
+      req: req as AuthRequest,
+    });
+
     res.json({ success: true, data: campaign });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
