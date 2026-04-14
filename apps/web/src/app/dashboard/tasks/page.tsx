@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { api } from '../../../lib/api';
+import { useToast } from '../../../components/ui/toast';
 import { Briefcase, MapPin, Clock, Users, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -30,17 +31,20 @@ export default function TasksPage() {
     fetch();
   }, []);
 
+  const { success, error } = useToast();
+
   const handleApply = async (taskId: string) => {
     setApplying(taskId);
     setErrorId(null);
     try {
       await api.post(`/tasks/${taskId}/apply`);
       setSuccessId(taskId);
-      // Update local task list to show applied
       setTasks(prev => prev.map(t => t._id === taskId ? { ...t, _applied: true } : t));
+      success('Successfully applied to task!');
     } catch (e: any) {
       setErrorId(taskId);
-      console.error(e.response?.data?.error || 'Failed to apply');
+      error(e.response?.data?.error || 'Failed to apply to task.');
+      console.error(e);
     } finally {
       setApplying(null);
     }

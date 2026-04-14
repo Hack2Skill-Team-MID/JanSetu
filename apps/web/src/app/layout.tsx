@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "../components/auth-provider";
 import I18nProvider from "../lib/i18n";
+import { ToastContainer } from "../components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"], display: 'swap', variable: '--font-inter' });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], display: 'swap', variable: '--font-space-grotesk' });
 
 export const metadata: Metadata = {
   title: "JanSetu | Smart Resource Allocation",
@@ -23,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark`}>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} dark`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#4f46e5" />
@@ -35,6 +37,7 @@ export default function RootLayout({
             <div className="min-h-screen flex flex-col">
               {children}
             </div>
+            <ToastContainer />
           </I18nProvider>
         </AuthProvider>
         <script

@@ -2,71 +2,114 @@
 
 @theme {
   --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
+
+  /* Color Palette based on Stitch 'Editorial Intelligence' */
+  --color-primary: #000000;
+  --color-primary-container: #131b2e;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #7c839b;
+
+  --color-secondary: #006c49;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #00714d;
+
+  --color-background: #f7f9fb;
+  --color-on-background: #191c1e;
+
+  --color-surface: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #45464d;
+
+  --color-outline: #76777d;
+  --color-outline-variant: #c6c6cd;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
 }
 
 @layer base {
   :root {
-    --background: #020617; /* slate-950 */
-    --foreground: #f8fafc; /* slate-50 */
-    
-    --primary: #4f46e5; /* indigo-600 */
-    --primary-foreground: #ffffff;
-    
-    --secondary: #1e293b; /* slate-800 */
-    --secondary-foreground: #f8fafc;
-    
-    --accent: #c084fc; /* purple-400 */
-    --accent-foreground: #ffffff;
-    
-    --muted: #0f172a; /* slate-900 */
-    --muted-foreground: #94a3b8; /* slate-400 */
-    
-    --card: #0f172a; /* slate-900 */
-    --card-foreground: #f8fafc;
-    
-    --border: #1e293b; /* slate-800 */
-    
-    --destructive: #ef4444; /* red-500 */
-    --destructive-foreground: #f8fafc;
-    
-    --success: #10b981; /* emerald-500 */
-    --success-foreground: #ffffff;
-    
-    --warning: #f59e0b; /* amber-500 */
-    --warning-foreground: #ffffff;
+    --background: var(--color-background);
+    --foreground: var(--color-on-background);
   }
 }
 
 @layer base {
-  * {
-    border-color: var(--border);
-  }
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    /* Space Grotesk used for specific elements, sans used generally */
+    font-family: var(--font-inter), sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), sans-serif;
+    letter-spacing: -0.02em;
+    color: var(--color-on-surface);
   }
 }
 
-/* Custom Utilities for glassmorphism */
+/* Custom Utilities for Stitch Requirements */
 @layer utilities {
+  .surface {
+    background-color: var(--color-surface);
+  }
+  .surface-container-lowest {
+    background-color: var(--color-surface-container-lowest);
+  }
+  .surface-container-low {
+    background-color: var(--color-surface-container-low);
+  }
+  .surface-container {
+    background-color: var(--color-surface-container);
+  }
+  .surface-container-high {
+    background-color: var(--color-surface-container-high);
+  }
+  .surface-container-highest {
+    background-color: var(--color-surface-container-highest);
+  }
+
+  /* Glassmorphism Effect per Stitch spec */
   .glass {
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.8); /* lowest at 80% */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   
-  .glass-card {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  /* Fallback ghost border */
+  .ghost-border {
+    border: 1px solid rgba(198, 198, 205, 0.2); /* outline-variant at 20% */
+  }
+
+  /* Structural fixes */
+  .text-display-lg {
+    font-family: var(--font-space-grotesk);
+    font-size: 3.5rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
   }
   
-  .text-gradient {
-    background: linear-gradient(to right, #818cf8, #c084fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .text-headline-lg {
+    font-family: var(--font-space-grotesk);
+    font-size: 2.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .text-body-md {
+    font-family: var(--font-inter);
+    font-size: 1rem;
+    line-height: 1.5;
   }
 }
 
@@ -87,14 +130,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: var(--color-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary);
+  background: var(--color-outline-variant);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: var(--color-outline);
 }

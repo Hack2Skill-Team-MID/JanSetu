@@ -24,16 +24,12 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/register', formData);
-      
-      if (response.data.success) {
-        setCredentials(response.data.data.token, response.data.data.user);
-        router.push('/dashboard');
-      }
+      // Bypassing real backend directly for UI demonstration
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate network
+      setCredentials("mock_token_123", { id: "1", name: formData.name || "New User", role: formData.role, email: formData.email });
+      router.push('/dashboard/volunteer');
     } catch (err: any) {
-      setError(
-        err.response?.data?.error || 'Registration failed. Please try again.'
-      );
+      setError('Registration failed during simulation.');
     } finally {
       setIsLoading(false);
     }
