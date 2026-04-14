@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://mongodb.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
 ---
 
@@ -44,7 +44,7 @@ jansetu/
 | Frontend | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui, Leaflet.js, Recharts |
 | Backend | Node.js, Express.js, TypeScript, Mongoose, JWT |
 | AI/ML | Python, FastAPI, Google Gemini API, Scikit-learn, Tesseract OCR |
-| Database | MongoDB Atlas, Redis |
+| Database | PostgreSQL, Redis |
 | Deployment | Vercel (Frontend), Railway (Backend + AI) |
 
 ## 🚀 Quick Start
@@ -52,15 +52,15 @@ jansetu/
 ### Prerequisites
 - Node.js >= 20
 - Python >= 3.11
-- MongoDB Atlas account
+- Cloud PostgreSQL account
 - Google Gemini API key
 
 ### Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/Hack2Skill-Team-MID/jansetu.git
-cd jansetu
+git clone https://github.com/Hack2Skill-Team-MID/JanSetu.git
+cd JanSetu
 
 # Install dependencies
 npm install
