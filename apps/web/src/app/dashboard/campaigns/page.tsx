@@ -6,7 +6,7 @@ import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { 
   Target, Users, IndianRupee, TrendingUp, MapPin, 
-  Calendar, ChevronRight, Sparkles, Heart, Plus 
+  Calendar, ChevronRight, Sparkles, Heart, Plus, Share2, Copy, Check
 } from 'lucide-react';
 
 export default function CampaignsPage() {
@@ -16,6 +16,15 @@ export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createForm, setCreateForm] = useState({ title: '', description: '', category: 'education', fundingGoal: '', location: '' });
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleShare = (campaignId: string) => {
+    const url = `${window.location.origin}/dashboard/donate?campaign=${campaignId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(campaignId);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -161,9 +170,18 @@ export default function CampaignsPage() {
                   <div className="flex items-center gap-3 text-xs text-slate-400">
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {c.location}</span>
                   </div>
-                  <button onClick={() => router.push(`/dashboard/donate?campaign=${c._id}`)} className="flex items-center gap-1 text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors">
-                    <Heart className="w-4 h-4" /> Donate
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleShare(c._id)}
+                      className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors px-2 py-1.5 rounded-lg hover:bg-indigo-500/10"
+                      title="Copy donation link"
+                    >
+                      {copiedId === c._id ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Share</>}
+                    </button>
+                    <button onClick={() => router.push(`/dashboard/donate?campaign=${c._id}`)} className="flex items-center gap-1 text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors">
+                      <Heart className="w-4 h-4" /> Donate
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

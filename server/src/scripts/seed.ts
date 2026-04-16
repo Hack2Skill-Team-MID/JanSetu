@@ -25,7 +25,7 @@ async function seed() {
       "FraudCaseNote", "TaskApplication", "ResourceAllocation",
       "AuditLog", "Message", "FraudCase", "EmergencyEvent",
       "Donation", "Task", "CommunityNeed", "SurveyUpload",
-      "Campaign", "Resource", "VolunteerProfile",
+      "Campaign", "Resource", "VolunteerProfile", "Notification",
       "Organization", "User"
     RESTART IDENTITY CASCADE
   `);

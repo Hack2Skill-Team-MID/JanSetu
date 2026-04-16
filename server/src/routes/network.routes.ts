@@ -5,6 +5,29 @@ import { protect as authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
+// GET /api/network — list all public NGOs (alias used by discover-ngos page)
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const { search } = req.query;
+    const where: any = { isActive: true };
+    if (search) where.name = { contains: search as string, mode: 'insensitive' };
+    const orgs = await prisma.organization.findMany({
+      where,
+      select: {
+        id: true, name: true, description: true, location: true, region: true,
+        focusAreas: true, trustScore: true, trustTier: true, isVerified: true,
+        website: true, statsVolunteersCount: true, statsCampaignsCount: true,
+      },
+      orderBy: { trustScore: 'desc' },
+      take: 50,
+    });
+    res.json({ success: true, data: { organizations: orgs.map(o => ({ ...o, _id: o.id })) } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
 // GET /api/network/ngos
 router.get('/ngos', async (req: Request, res: Response) => {
   try {
@@ -139,6 +162,54 @@ router.get('/map-data', async (_req: Request, res: Response) => {
         organizations: orgs.map((o) => ({ type: 'organization', id: o.id, name: o.name, orgType: o.type, region: o.region, coordinates: o.coordinates, trustScore: o.trustScore })),
       },
     });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/network/join-request — community member applies to join an NGO
+router.post('/join-request', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { organizationId } = req.body;
+    if (!organizationId) {
+      return res.status(400).json({ success: false, error: 'organizationId required' });
+    }
+    const org = await prisma.organization.findUnique({ where: { id: organizationId }, select: { id: true, name: true } });
+    if (!org) return res.status(404).json({ success: false, error: 'Organization not found' });
+
+    // Create a message to the org admins as a join request
+    const admins = await prisma.user.findMany({
+      where: { organizationId, role: { in: ['ngo_admin', 'ngo_coordinator', 'platform_admin'] } },
+      select: { id: true },
+    });
+
+    // Send message to each admin
+    for (const admin of admins) {
+      await prisma.message.create({
+        data: {
+          senderId: user.id,
+          receiverId: admin.id,
+          content: `🙋 Join Request from ${user.name}: I'd like to join ${org.name} as a community member/volunteer. Please review my profile and let me know!`,
+          messageType: 'direct',
+        },
+      });
+    }
+
+    // Also notify with a notification
+    try {
+      const { createNotification } = await import('./notifications.routes');
+      for (const admin of admins) {
+        await createNotification(
+          admin.id, 'message_received',
+          `🙋 New Join Request`,
+          `${user.name} wants to join ${org.name}. Check your messages to respond.`,
+          { userId: user.id, organizationId }
+        );
+      }
+    } catch { /* non-critical */ }
+
+    res.json({ success: true, data: { message: 'Join request sent to NGO admins!' } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

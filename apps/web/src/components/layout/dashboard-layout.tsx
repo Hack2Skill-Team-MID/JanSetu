@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
 import { useTranslation, LANGUAGES } from '../../lib/i18n';
-import {
-  LayoutDashboard, Users, FileText, Settings, LogOut, Menu, X, Bell,
+import { LayoutDashboard, Users, FileText, Settings, LogOut, Menu, X, Bell,
   MapPin, Briefcase, Target, Globe, Trophy, Package, Heart, IndianRupee,
   MessageSquare, Map, Bot, BarChart3, Shield, Mic, AlertTriangle, BookOpen,
   Handshake, Search, Building2, Gift, TrendingUp, Star, Network
 } from 'lucide-react';
+import NotificationBell from '../ui/NotificationBell';
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; gradientClass: string }> = {
   platform_admin:  { label: 'Platform Admin',    color: '#818cf8', gradientClass: 'from-indigo-500 to-violet-500' },
@@ -244,10 +244,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               ))}
             </div>
-            <button className="p-2 rounded-full text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors relative">
-              <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-500" />
-              <Bell className="w-5 h-5" />
-            </button>
+            {/* Notification Bell */}
+            <NotificationBell />
           </div>
         </header>
 
