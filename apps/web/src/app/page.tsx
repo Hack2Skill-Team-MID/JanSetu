@@ -268,19 +268,19 @@ export default function Home() {
             Join the ecosystem that connects NGOs, volunteers, donors, and communities into one intelligent and trustworthy system.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register"
+            <Link href="/login?role=ngo_coordinator"
               className="px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-all shadow-[0_0_24px_rgba(79,70,229,0.5)] flex items-center gap-2 justify-center group">
-              Register Your NGO
+              NGO Admin Login
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/register"
+            <Link href="/login?role=volunteer"
               className="px-8 py-4 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white font-semibold transition-all flex items-center gap-2 justify-center">
-              Join as Volunteer
+              Volunteer Login
             </Link>
-            <Link href="/dashboard/donate"
-              className="px-8 py-4 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-all flex items-center gap-2 justify-center">
-              <Heart className="w-4 h-4 text-pink-400" />
-              Donate Now
+            <Link href="/login?role=donor"
+              className="px-8 py-4 rounded-full bg-gradient-to-r from-pink-600/90 to-rose-600/90 hover:opacity-90 text-white font-semibold transition-all flex items-center gap-2 justify-center">
+              <Heart className="w-4 h-4" />
+              Donor Login
             </Link>
           </div>
         </div>
@@ -325,7 +325,7 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-semibold text-slate-300 mb-3">Tech Stack</h4>
               <div className="flex flex-wrap gap-2">
-                {['Next.js', 'Express', 'MongoDB', 'TypeScript', 'Gemini AI', 'Leaflet', 'Socket.io'].map((tech) => (
+                {['Next.js', 'Express', 'PostgreSQL', 'Prisma', 'TypeScript', 'Gemini AI', 'Razorpay'].map((tech) => (
                   <span key={tech} className="text-[10px] px-2 py-1 bg-slate-800 rounded-md text-slate-400 border border-slate-700">{tech}</span>
                 ))}
               </div>

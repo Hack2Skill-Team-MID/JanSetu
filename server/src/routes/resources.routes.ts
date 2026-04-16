@@ -52,6 +52,12 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 router.get('/alerts', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
+
+    // Users without an org have no resource alerts
+    if (!user.organizationId) {
+      return res.json({ success: true, data: { expiringSoon: [], lowStock: [], expired: [], totalAlerts: 0 } });
+    }
+
     const sevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const [expiring, lowStock, expired] = await Promise.all([

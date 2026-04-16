@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '../../../lib/api';
 import { useAuthStore } from '../../../store/auth-store';
 import {
-  Shield, Users, Globe, Heart, ArrowRight, ChevronDown,
-  Building2, Handshake, Search, IndianRupee, Eye, EyeOff, Sparkles
+  Shield, Handshake, Globe, Heart, ArrowRight, ChevronDown,
+  Eye, EyeOff, Sparkles
 } from 'lucide-react';
 
 const ROLES = [
@@ -73,10 +73,14 @@ const ROLES = [
   },
 ];
 
-export default function LoginPage() {
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+function LoginInner() {
+  const searchParams = useSearchParams();
+  const urlRole = searchParams.get('role');
+  const initialRole = ROLES.find((r) => r.id === urlRole) || null;
+
+  const [selectedRole, setSelectedRole] = useState<string | null>(initialRole?.id || null);
+  const [email, setEmail] = useState(initialRole?.demoEmail || '');
+  const [password, setPassword] = useState(initialRole?.demoPassword || '');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -136,7 +140,7 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 gap-12">
-        {/* Who are you Section */}
+        {/* Role Selector */}
         <div className="w-full max-w-5xl">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/60 border border-slate-700/60 text-indigo-300 text-xs font-medium mb-4">
@@ -147,7 +151,6 @@ export default function LoginPage() {
             <p className="text-slate-400 max-w-md mx-auto">Pick your role to get a personalized experience — the right tools, right features, right dashboard.</p>
           </div>
 
-          {/* 4 Role Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {ROLES.map((r) => {
               const Icon = r.icon;
@@ -158,13 +161,13 @@ export default function LoginPage() {
                   onClick={() => handleRoleSelect(r.id)}
                   className={`relative group text-left p-5 rounded-2xl border-2 transition-all duration-200 hover:scale-[1.02] ${
                     isSelected
-                      ? `${r.borderColor} ${r.bgActive} shadow-[0_0_24px_${r.glowColor}]`
+                      ? `${r.borderColor} ${r.bgActive}`
                       : 'border-slate-700/60 bg-slate-900/40 hover:border-slate-600'
                   }`}
                   style={isSelected ? { boxShadow: `0 0 32px ${r.glowColor}` } : {}}
                 >
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-current flex items-center justify-center">
+                    <div className="absolute top-3 right-3">
                       <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${r.gradient} flex items-center justify-center`}>
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -190,26 +193,22 @@ export default function LoginPage() {
                       </div>
                     ))}
                   </div>
-
-                  {!isSelected && (
-                    <div className={`mt-4 flex items-center gap-1 text-xs font-medium text-${r.color}-400 opacity-0 group-hover:opacity-100 transition-opacity`}>
-                      Select this role <ArrowRight className="w-3 h-3" />
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Login Form — slides in after role selection */}
+        {/* Login Form */}
         <div
           ref={formRef}
           className={`w-full max-w-md transition-all duration-500 ${selectedRole ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
         >
           {role && (
-            <div className={`glass-card p-8 rounded-2xl border ${role.borderColor}/40`}
-              style={{ boxShadow: `0 0 48px ${role.glowColor}` }}>
+            <div
+              className={`glass-card p-8 rounded-2xl border ${role.borderColor}/40`}
+              style={{ boxShadow: `0 0 48px ${role.glowColor}` }}
+            >
               {/* Role Context Tag */}
               <div className="flex items-center gap-3 mb-6 pb-5 border-b border-slate-700/50">
                 <div className={`p-2 rounded-xl bg-gradient-to-br ${role.gradient}`}>
@@ -270,7 +269,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Demo Credentials hint */}
+                {/* Demo hint */}
                 <div className={`text-xs px-3 py-2 rounded-lg ${role.bgActive} border ${role.borderColor}/30`}>
                   <span className={`font-semibold ${role.textActive}`}>🔑 Demo:</span>
                   <span className="text-slate-400 ml-1">{role.demoEmail} / password123</span>
@@ -307,5 +306,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginInner />
+    </Suspense>
   );
 }
