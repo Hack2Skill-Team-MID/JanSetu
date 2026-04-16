@@ -1,15 +1,10 @@
 import { Router, Response } from 'express';
-import { CommunityNeed } from '../models/CommunityNeed';
-import { Task } from '../models/Task';
-import { User } from '../models/User';
-import { VolunteerProfile } from '../models/VolunteerProfile';
+import prisma from '../config/db';
 import { protect, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // @route   GET /api/dashboard/stats
-// @desc    Get platform statistics
-// @access  Private
 router.get('/stats', protect, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const [
@@ -21,13 +16,13 @@ router.get('/stats', protect, async (_req: AuthRequest, res: Response): Promise<
       completedTasks,
       totalNGOs,
     ] = await Promise.all([
-      CommunityNeed.countDocuments(),
-      CommunityNeed.countDocuments({ urgencyLevel: 'critical' }),
-      VolunteerProfile.countDocuments(),
-      VolunteerProfile.countDocuments({ isActive: true }),
-      Task.countDocuments(),
-      Task.countDocuments({ status: 'completed' }),
-      User.countDocuments({ role: 'ngo_coordinator' }),
+      prisma.communityNeed.count(),
+      prisma.communityNeed.count({ where: { urgencyLevel: 'critical' } }),
+      prisma.volunteerProfile.count(),
+      prisma.volunteerProfile.count({ where: { isActive: true } }),
+      prisma.task.count(),
+      prisma.task.count({ where: { status: 'completed' } }),
+      prisma.user.count({ where: { role: 'ngo_coordinator' } }),
     ]);
 
     const matchSuccessRate =
@@ -54,62 +49,62 @@ router.get('/stats', protect, async (_req: AuthRequest, res: Response): Promise<
 });
 
 // @route   GET /api/dashboard/heatmap
-// @desc    Get geospatial need density data
-// @access  Private
 router.get('/heatmap', protect, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const needs = await CommunityNeed.aggregate([
-      { $match: { status: { $ne: 'resolved' } } },
-      {
-        $group: {
-          _id: {
-            region: '$region',
-            category: '$category',
-          },
-          coordinates: { $first: '$coordinates' },
-          count: { $sum: 1 },
-          avgPriority: { $avg: '$priorityScore' },
-        },
+    // Use Prisma groupBy + raw query for aggregation
+    const needs = await prisma.communityNeed.findMany({
+      where: { status: { not: 'resolved' } },
+      select: {
+        region: true,
+        category: true,
+        coordinates: true,
+        priorityScore: true,
       },
-      {
-        $project: {
-          _id: 0,
-          region: '$_id.region',
-          category: '$_id.category',
-          coordinates: 1,
-          count: 1,
-          intensity: {
-            $min: [{ $divide: ['$avgPriority', 100] }, 1],
-          },
-        },
-      },
-    ]);
+    });
 
-    res.json({ success: true, data: needs });
+    // Group in JS (simpler than raw SQL for this use case)
+    const groups: Record<string, { region: string; category: string; coordinates: number[]; count: number; totalPriority: number }> = {};
+    for (const n of needs) {
+      const key = `${n.region}__${n.category}`;
+      if (!groups[key]) {
+        groups[key] = { region: n.region, category: n.category, coordinates: n.coordinates, count: 0, totalPriority: 0 };
+      }
+      groups[key].count++;
+      groups[key].totalPriority += n.priorityScore;
+    }
+
+    const result = Object.values(groups).map((g) => ({
+      region: g.region,
+      category: g.category,
+      coordinates: g.coordinates,
+      count: g.count,
+      intensity: Math.min(g.totalPriority / g.count / 100, 1),
+    }));
+
+    res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // @route   GET /api/dashboard/category-breakdown
-// @desc    Get needs count by category
-// @access  Private
 router.get('/category-breakdown', protect, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const breakdown = await CommunityNeed.aggregate([
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
-          critical: {
-            $sum: { $cond: [{ $eq: ['$urgencyLevel', 'critical'] }, 1, 0] },
-          },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
+    const needs = await prisma.communityNeed.findMany({
+      select: { category: true, urgencyLevel: true },
+    });
 
-    res.json({ success: true, data: breakdown });
+    const breakdown: Record<string, { _id: string; count: number; critical: number }> = {};
+    for (const n of needs) {
+      if (!breakdown[n.category]) {
+        breakdown[n.category] = { _id: n.category, count: 0, critical: 0 };
+      }
+      breakdown[n.category].count++;
+      if (n.urgencyLevel === 'critical') breakdown[n.category].critical++;
+    }
+
+    const result = Object.values(breakdown).sort((a, b) => b.count - a.count);
+    res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

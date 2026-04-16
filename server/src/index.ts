@@ -70,7 +70,7 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
-    // Connect to MongoDB
+    // Connect to PostgreSQL
     await connectDB();
 
     app.listen(config.port, () => {

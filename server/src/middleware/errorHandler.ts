@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 
 export const errorHandler = (
   err: Error,
@@ -8,33 +9,41 @@ export const errorHandler = (
 ): void => {
   console.error('❌ Error:', err.message);
 
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const messages = Object.values((err as any).errors).map(
-      (e: any) => e.message
-    );
-    res.status(400).json({
-      success: false,
-      error: messages.join(', '),
-    });
-    return;
+  // Prisma unique constraint violation (replaces Mongoose code 11000)
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2002') {
+      const target = (err.meta?.target as string[])?.join(', ') || 'field';
+      res.status(400).json({
+        success: false,
+        error: `${target} already exists`,
+      });
+      return;
+    }
+
+    // Record not found
+    if (err.code === 'P2025') {
+      res.status(404).json({
+        success: false,
+        error: 'Resource not found',
+      });
+      return;
+    }
+
+    // Foreign key constraint failed
+    if (err.code === 'P2003') {
+      res.status(400).json({
+        success: false,
+        error: 'Related record not found — invalid reference',
+      });
+      return;
+    }
   }
 
-  // Mongoose duplicate key error
-  if ((err as any).code === 11000) {
-    const field = Object.keys((err as any).keyValue)[0];
+  // Prisma validation error
+  if (err instanceof Prisma.PrismaClientValidationError) {
     res.status(400).json({
       success: false,
-      error: `${field} already exists`,
-    });
-    return;
-  }
-
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    res.status(400).json({
-      success: false,
-      error: 'Resource not found — invalid ID',
+      error: 'Validation failed — check your input data',
     });
     return;
   }
