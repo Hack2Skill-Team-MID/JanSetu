@@ -38,9 +38,11 @@ api.interceptors.response.use(
     // Handle 401 Unauthorized globally
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
-        const authStorage = localStorage.getItem('auth-storage');
-        if (authStorage) {
-          localStorage.removeItem('auth-storage');
+        localStorage.removeItem('auth-storage');
+        // Redirect to login only if not already there
+        const path = window.location.pathname;
+        if (!path.startsWith('/login') && !path.startsWith('/register')) {
+          window.location.href = '/login';
         }
       }
       return Promise.reject(error);
