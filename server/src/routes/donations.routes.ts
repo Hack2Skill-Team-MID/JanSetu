@@ -4,8 +4,19 @@ import prisma from '../config/db';
 import { protect as authMiddleware, AuthRequest } from '../middleware/auth';
 import { createAuditEntry } from '../middleware/audit';
 import crypto from 'crypto';
+import Razorpay from 'razorpay';
 
 const router = Router();
+
+// Initialize Razorpay instance
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || '',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+});
+
+const isRazorpayConfigured = (): boolean => {
+  return !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+};
 
 // POST /api/donations/initiate
 router.post('/initiate', authMiddleware, async (req: Request, res: Response) => {
@@ -17,7 +28,25 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
       return res.status(400).json({ success: false, error: 'Amount must be at least ₹1' });
     }
 
-    const mockOrderId = `order_${crypto.randomBytes(12).toString('hex')}`;
+    let razorpayOrderId: string;
+
+    if (isRazorpayConfigured()) {
+      // --- Real Razorpay Order ---
+      const order = await razorpay.orders.create({
+        amount: Math.round(amount * 100), // Razorpay expects paise
+        currency: 'INR',
+        receipt: `rcpt_${crypto.randomBytes(8).toString('hex')}`,
+        notes: {
+          campaignId: campaignId || '',
+          donorId: user.id,
+          donorEmail: user.email,
+        },
+      });
+      razorpayOrderId = order.id;
+    } else {
+      // --- Demo Mode (no Razorpay keys) ---
+      razorpayOrderId = `order_demo_${crypto.randomBytes(12).toString('hex')}`;
+    }
 
     const donation = await prisma.donation.create({
       data: {
@@ -27,7 +56,7 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
         needId,
         amount,
         type: type || 'one_time',
-        razorpayOrderId: mockOrderId,
+        razorpayOrderId,
         paymentStatus: 'pending',
         isAnonymous: isAnonymous || false,
         message,
@@ -38,10 +67,11 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
       success: true,
       data: {
         donationId: donation.id,
-        razorpayOrderId: mockOrderId,
+        razorpayOrderId,
         amount,
         currency: 'INR',
         razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_demo',
+        demoMode: !isRazorpayConfigured(),
       },
     });
 
@@ -59,17 +89,40 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
 // POST /api/donations/verify
 router.post('/verify', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { razorpayPaymentId, razorpaySignature, donationId } = req.body;
+    const { razorpayPaymentId, razorpaySignature, razorpayOrderId, donationId } = req.body;
 
     const donation = await prisma.donation.findUnique({ where: { id: donationId } });
     if (!donation) return res.status(404).json({ success: false, error: 'Donation not found' });
+
+    let verified = false;
+
+    if (isRazorpayConfigured() && razorpaySignature) {
+      // --- Real Razorpay Signature Verification ---
+      const body = (razorpayOrderId || donation.razorpayOrderId) + '|' + razorpayPaymentId;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+        .update(body)
+        .digest('hex');
+
+      if (expectedSignature !== razorpaySignature) {
+        return res.status(400).json({ success: false, error: 'Payment verification failed — invalid signature' });
+      }
+      verified = true;
+    } else {
+      // --- Demo Mode: auto-verify ---
+      verified = true;
+    }
+
+    if (!verified) {
+      return res.status(400).json({ success: false, error: 'Payment verification failed' });
+    }
 
     const updated = await prisma.donation.update({
       where: { id: donationId },
       data: {
         paymentStatus: 'completed',
-        razorpayPaymentId: razorpayPaymentId || `pay_${crypto.randomBytes(12).toString('hex')}`,
-        razorpaySignature: razorpaySignature || 'simulated',
+        razorpayPaymentId: razorpayPaymentId || `pay_demo_${crypto.randomBytes(12).toString('hex')}`,
+        razorpaySignature: razorpaySignature || 'demo_verified',
       },
     });
 
@@ -175,4 +228,3 @@ router.get('/impact/:userId', async (req: Request, res: Response) => {
 });
 
 export default router;
-

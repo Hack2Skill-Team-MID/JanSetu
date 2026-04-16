@@ -50,10 +50,22 @@ function DonatePortalInner() {
     fetchData();
   }, []);
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleDonate = async () => {
     if (!amount || !selectedCampaign) return;
     setDonating(true);
     try {
+      // Step 1: Initiate donation on backend
       const res = await api.post('/donations/initiate', {
         amount: parseInt(amount),
         campaignId: selectedCampaign,
@@ -61,16 +73,73 @@ function DonatePortalInner() {
         isAnonymous,
         type: 'one_time',
       });
-      if (res.data.success) {
-        // In production: open Razorpay checkout here
+
+      if (!res.data.success) throw new Error('Failed to initiate donation');
+
+      const { donationId, razorpayOrderId, razorpayKeyId, demoMode } = res.data.data;
+
+      if (demoMode || razorpayKeyId === 'rzp_test_demo') {
+        // --- Demo Mode: auto-verify without Razorpay modal ---
         await api.post('/donations/verify', {
-          donationId: res.data.data.donationId,
-          razorpayOrderId: res.data.data.razorpayOrderId,
+          donationId,
+          razorpayOrderId,
         });
         setSuccess(true);
         setAmount('');
         setMessage('');
+        // Refresh donation history
+        const donRes = await api.get('/donations/my').catch(() => ({ data: { success: false } }));
+        if (donRes.data.success) setMyDonations(donRes.data.data);
         setTimeout(() => setSuccess(false), 5000);
+      } else {
+        // --- Real Razorpay Checkout ---
+        const loaded = await loadRazorpayScript();
+        if (!loaded) throw new Error('Failed to load Razorpay SDK');
+
+        const options = {
+          key: razorpayKeyId,
+          amount: parseInt(amount) * 100, // paise
+          currency: 'INR',
+          name: 'JanSetu',
+          description: 'Campaign Donation',
+          order_id: razorpayOrderId,
+          handler: async (response: any) => {
+            // Step 2: Verify payment on backend
+            try {
+              await api.post('/donations/verify', {
+                donationId,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+              setSuccess(true);
+              setAmount('');
+              setMessage('');
+              const donRes = await api.get('/donations/my').catch(() => ({ data: { success: false } }));
+              if (donRes.data.success) setMyDonations(donRes.data.data);
+              setTimeout(() => setSuccess(false), 5000);
+            } catch (verifyErr) {
+              console.error('Verification failed:', verifyErr);
+              alert('Payment was received but verification failed. Please contact support.');
+            }
+          },
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || '',
+          },
+          theme: {
+            color: '#6366f1',
+          },
+          modal: {
+            ondismiss: () => {
+              setDonating(false);
+            },
+          },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+        return; // Don't set donating=false yet, modal handles it
       }
     } catch (err) {
       console.error(err);
