@@ -156,5 +156,42 @@ router.get(
   }
 );
 
+// POST /api/volunteers/ai-match — find tasks matching volunteer's skills
+router.post('/ai-match', protect, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { skills = [], location = '', availability = 'flexible' } = req.body;
+
+    // Fetch open tasks
+    const tasks = await prisma.task.findMany({
+      where: { status: 'open' },
+      take: 50,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Score each task by skill match
+    const scored = tasks
+      .map((task: any) => {
+        const taskSkills: string[] = task.requiredSkills || [];
+        const matchedSkills = skills.filter((s: string) =>
+          taskSkills.some((ts: string) => ts.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(ts.toLowerCase()))
+        );
+        const skillScore = taskSkills.length > 0
+          ? Math.round((matchedSkills.length / Math.max(taskSkills.length, skills.length)) * 60)
+          : 30;
+        const locationScore = location && task.location?.toLowerCase().includes(location.split(',')[0].toLowerCase()) ? 30 : 10;
+        const availScore = 10;
+        const matchScore = Math.min(skillScore + locationScore + availScore, 99);
+        return { ...task, _id: task.id, matchScore, matchedSkills };
+      })
+      .filter((t: any) => t.matchScore >= 30)
+      .sort((a: any, b: any) => b.matchScore - a.matchScore)
+      .slice(0, 10);
+
+    res.json({ success: true, data: { matches: scored, total: scored.length } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
 

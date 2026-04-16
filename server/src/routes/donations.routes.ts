@@ -161,10 +161,23 @@ router.post('/verify', authMiddleware, async (req: Request, res: Response) => {
     }
 
     res.json({ success: true, data: { message: 'Payment verified successfully', donation: { ...updated, _id: updated.id } } });
+
+    // Fire-and-forget: notify the donor
+    try {
+      const { createNotification } = await import('./notifications.routes');
+      await createNotification(
+        donation.donorId,
+        'donation_received',
+        '💰 Donation Successful!',
+        `Your donation of ₹${donation.amount.toLocaleString()} has been verified and received. Thank you for your generosity!`,
+        { donationId: donation.id, amount: donation.amount, campaignId: donation.campaignId }
+      );
+    } catch { /* non-critical */ }
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 // GET /api/donations/my
 router.get('/my', authMiddleware, async (req: Request, res: Response) => {

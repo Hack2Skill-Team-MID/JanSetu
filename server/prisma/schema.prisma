@@ -48,6 +48,7 @@ model User {
   surveyUploads       SurveyUpload[]
   sentMessages        Message[]          @relation("MessageSender")
   auditLogs           AuditLog[]         @relation("AuditActor")
+  notifications       Notification[]     @relation("UserNotifications")
   reportedFraudCases  FraudCase[]        @relation("FraudReporter")
   assignedFraudCases  FraudCase[]        @relation("FraudAssignee")
   fraudCaseNotes      FraudCaseNote[]
@@ -572,4 +573,22 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([organizationId, timestamp])
   @@index([action])
+}
+
+// ═══════════════════════════════════════════
+// NOTIFICATION
+// ═══════════════════════════════════════════
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation("UserNotifications", fields: [userId], references: [id])
+  type        String   // donation_received | task_assigned | emergency_alert | campaign_update | badge_earned | message_received | need_reported
+  title       String
+  body        String
+  data        Json?    // extra metadata (campaignId, taskId, amount, etc.)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
