@@ -8,15 +8,27 @@ import Razorpay from 'razorpay';
 
 const router = Router();
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+// Initialize Razorpay instance only if keys are configured
+let razorpay: any = null;
 
 const isRazorpayConfigured = (): boolean => {
-  return !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+  return !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET &&
+    process.env.RAZORPAY_KEY_ID !== 'your-razorpay-key-id');
 };
+
+try {
+  if (isRazorpayConfigured()) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+    console.log('💳 Razorpay initialized (live mode)');
+  } else {
+    console.log('💳 Razorpay not configured — running in demo mode');
+  }
+} catch (err) {
+  console.warn('⚠️ Razorpay initialization failed, using demo mode:', err);
+}
 
 // POST /api/donations/initiate
 router.post('/initiate', authMiddleware, async (req: Request, res: Response) => {
@@ -63,6 +75,7 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
       },
     });
 
+    // Fire-and-forget audit log — must not block or throw after response
     res.status(201).json({
       success: true,
       data: {
@@ -75,13 +88,18 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
       },
     });
 
-    await createAuditEntry({
-      action: 'donation', entity: 'donation', entityId: donation.id,
-      description: `Donation initiated: ₹${amount}${campaignId ? ' for campaign' : ''}`,
-      after: { amount, type: type || 'one_time', isAnonymous },
-      req: req as AuthRequest,
-    });
+    try {
+      await createAuditEntry({
+        action: 'donation', entity: 'donation', entityId: donation.id,
+        description: `Donation initiated: ₹${amount}${campaignId ? ' for campaign' : ''}`,
+        after: { amount, type: type || 'one_time', isAnonymous },
+        req: req as AuthRequest,
+      });
+    } catch (auditErr) {
+      console.warn('⚠️ Audit log failed (non-critical):', auditErr);
+    }
   } catch (err: any) {
+    console.error('❌ Donation initiate error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
