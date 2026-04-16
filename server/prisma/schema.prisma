@@ -1,0 +1,575 @@
+// ─────────────────────────────────────────
+// JanSetu — Prisma Schema (PostgreSQL)
+// ─────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════
+// USER
+// ═══════════════════════════════════════════
+model User {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  password        String
+  role            String   @default("volunteer") // platform_admin | ngo_admin | ngo_staff | volunteer | donor | community_reporter | ngo_coordinator | admin
+  avatar          String?
+  isVerified      Boolean  @default(false)
+
+  // Multi-tenant
+  organizationId  String?
+  organization    Organization? @relation("OrgMembers", fields: [organizationId], references: [id])
+
+  // Reputation & Gamification
+  reputationScore Int      @default(50)
+  badges          String[] @default([])
+  points          Int      @default(0)
+
+  // Preferences
+  language        String   @default("en")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  volunteerProfile    VolunteerProfile?
+  createdOrganizations Organization[]    @relation("OrgCreator")
+  createdCampaigns    Campaign[]         @relation("CampaignCreator")
+  donations           Donation[]         @relation("DonorDonations")
+  createdTasks        Task[]             @relation("TaskCreator")
+  taskApplications    TaskApplication[]
+  communityNeeds      CommunityNeed[]    @relation("NeedCreator")
+  surveyUploads       SurveyUpload[]
+  sentMessages        Message[]          @relation("MessageSender")
+  auditLogs           AuditLog[]         @relation("AuditActor")
+  reportedFraudCases  FraudCase[]        @relation("FraudReporter")
+  assignedFraudCases  FraudCase[]        @relation("FraudAssignee")
+  fraudCaseNotes      FraudCaseNote[]
+  activatedEmergencies EmergencyEvent[]  @relation("EmergencyActivator")
+  resolvedEmergencies  EmergencyEvent[]  @relation("EmergencyResolver")
+
+  @@index([email])
+  @@index([role])
+  @@index([organizationId])
+}
+
+// ═══════════════════════════════════════════
+// ORGANIZATION
+// ═══════════════════════════════════════════
+model Organization {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  description     String
+  logo            String?
+  type            String   @default("ngo") // ngo | foundation | government | community_group
+
+  // Verification
+  verified        Boolean  @default(false)
+  registrationCert String?
+  taxExemptionCert String?
+  governmentId    String?
+
+  // Trust
+  trustScore      Int      @default(30)
+  trustTier       String   @default("unverified") // verified | partially_verified | unverified | suspended
+
+  // Config
+  mode            String   @default("private") // private | public
+  subscription    String   @default("free") // free | pro | enterprise
+
+  // Contact
+  email           String
+  phone           String?
+  website         String?
+  address         String
+  region          String
+  coordinates     Float[]  @default([0, 0])
+
+  // Stats (denormalized)
+  statsTotalCampaigns       Int @default(0)
+  statsActiveCampaigns      Int @default(0)
+  statsTotalVolunteers      Int @default(0)
+  statsTotalDonationsReceived Float @default(0)
+  statsPeopleHelped         Int @default(0)
+
+  // Admin
+  createdById     String
+  createdBy       User     @relation("OrgCreator", fields: [createdById], references: [id])
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  members         User[]       @relation("OrgMembers")
+  campaigns       Campaign[]
+  donations       Donation[]   @relation("OrgDonations")
+  resources       Resource[]
+  messages        Message[]    @relation("OrgMessages")
+  auditLogs       AuditLog[]   @relation("OrgAuditLogs")
+  fraudCases      FraudCase[]  @relation("OrgFraudCases")
+  emergencyEvents EmergencyEvent[]
+
+  @@index([slug])
+  @@index([region])
+  @@index([mode, isActive])
+  @@index([trustScore])
+}
+
+// ═══════════════════════════════════════════
+// CAMPAIGN
+// ═══════════════════════════════════════════
+model Campaign {
+  id              String   @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  createdById     String
+  createdBy       User     @relation("CampaignCreator", fields: [createdById], references: [id])
+
+  // Core
+  title           String
+  description     String
+  category        String
+  tags            String[] @default([])
+  coverImage      String?
+
+  // Visibility
+  visibility      String   @default("private") // private | public
+  featured        Boolean  @default(false)
+
+  // Timeline
+  startDate       DateTime
+  endDate         DateTime
+  status          String   @default("draft") // draft | active | paused | completed | cancelled
+
+  // Location
+  location        String
+  region          String?
+  coordinates     Float[]  @default([0, 0])
+
+  // Goals
+  goalsVolunteersNeeded  Int   @default(0)
+  goalsVolunteersJoined  Int   @default(0)
+  goalsFundingGoal       Float @default(0)
+  goalsFundingRaised     Float @default(0)
+  goalsPeopleToHelp      Int   @default(0)
+  goalsPeopleHelped      Int   @default(0)
+
+  // Milestones (JSON array)
+  milestones      Json     @default("[]")
+
+  // Impact
+  impactSummary   String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  donations       Donation[] @relation("CampaignDonations")
+
+  @@index([organizationId, status])
+  @@index([visibility, status])
+  @@index([category])
+  @@index([region])
+}
+
+// ═══════════════════════════════════════════
+// COMMUNITY NEED
+// ═══════════════════════════════════════════
+model CommunityNeed {
+  id              String   @id @default(uuid())
+  ngoId           String
+  ngo             User     @relation("NeedCreator", fields: [ngoId], references: [id])
+
+  title           String
+  description     String
+  category        String   // education | healthcare | sanitation | infrastructure | food_security | water | employment | safety | environment | other
+  urgencyLevel    String   @default("medium") // critical | high | medium | low
+  priorityScore   Int      @default(50)
+  status          String   @default("reported") // reported | verified | in_progress | resolved
+  location        String
+  coordinates     Float[]  @default([0, 0])
+  region          String
+  affectedPopulation Int?
+  rawSource       String?
+  sourceType      String   @default("manual") // manual | survey_upload | field_report
+  images          String[] @default([])
+  reportedAt      DateTime @default(now())
+  resolvedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  tasks           Task[]
+  donations       Donation[] @relation("NeedDonations")
+
+  @@index([category, urgencyLevel])
+  @@index([region, status])
+  @@index([priorityScore])
+}
+
+// ═══════════════════════════════════════════
+// DONATION
+// ═══════════════════════════════════════════
+model Donation {
+  id              String   @id @default(uuid())
+  donorId         String
+  donor           User     @relation("DonorDonations", fields: [donorId], references: [id])
+  organizationId  String?
+  organization    Organization? @relation("OrgDonations", fields: [organizationId], references: [id])
+  campaignId      String?
+  campaign        Campaign? @relation("CampaignDonations", fields: [campaignId], references: [id])
+  needId          String?
+  need            CommunityNeed? @relation("NeedDonations", fields: [needId], references: [id])
+
+  // Payment
+  amount          Float
+  currency        String   @default("INR")
+  paymentMethod   String   @default("razorpay") // razorpay | upi | bank_transfer | cash
+  paymentStatus   String   @default("pending") // pending | completed | failed | refunded
+
+  // Razorpay
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  // Type
+  type            String   @default("one_time") // one_time | recurring
+  recurringFrequency String? // monthly | quarterly | yearly
+  recurringNextDate  DateTime?
+  recurringActive    Boolean?
+
+  // Impact
+  impactDescription String?
+
+  // Receipt
+  receiptGenerated Boolean @default(false)
+  receiptUrl       String?
+
+  // Metadata
+  isAnonymous     Boolean  @default(false)
+  message         String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([donorId, createdAt])
+  @@index([organizationId, paymentStatus])
+  @@index([campaignId])
+  @@index([paymentStatus, createdAt])
+}
+
+// ═══════════════════════════════════════════
+// TASK
+// ═══════════════════════════════════════════
+model Task {
+  id              String   @id @default(uuid())
+  needId          String
+  need            CommunityNeed @relation(fields: [needId], references: [id])
+  createdById     String
+  createdBy       User     @relation("TaskCreator", fields: [createdById], references: [id])
+
+  title           String
+  description     String
+  requiredSkills  String[] @default([])
+  location        String
+  coordinates     Float[]  @default([0, 0])
+  deadline        DateTime
+  volunteersNeeded   Int   @default(1)
+  volunteersAssigned Int   @default(0)
+  status          String   @default("open") // open | in_progress | completed | cancelled
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  applications    TaskApplication[]
+  resourceAllocations ResourceAllocation[]
+
+  @@index([status, deadline])
+}
+
+// ═══════════════════════════════════════════
+// TASK APPLICATION (was sub-document in Task)
+// ═══════════════════════════════════════════
+model TaskApplication {
+  id              String   @id @default(uuid())
+  taskId          String
+  task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  volunteerId     String
+  volunteer       User     @relation(fields: [volunteerId], references: [id])
+
+  volunteerName   String
+  matchScore      Int      @default(0)
+  matchReasons    String[] @default([])
+  status          String   @default("pending") // pending | accepted | rejected | withdrawn
+  appliedAt       DateTime @default(now())
+
+  @@index([taskId])
+  @@index([volunteerId])
+}
+
+// ═══════════════════════════════════════════
+// VOLUNTEER PROFILE
+// ═══════════════════════════════════════════
+model VolunteerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+
+  skills          String[] @default([])
+  location        String   @default("")
+  coordinates     Float[]  @default([0, 0])
+  availability    String   @default("weekends") // full-time | part-time | weekends | evenings
+  bio             String?
+  impactScore     Int      @default(0)
+  tasksCompleted  Int      @default(0)
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════
+// RESOURCE
+// ═══════════════════════════════════════════
+model Resource {
+  id              String   @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  name            String
+  category        String   // food | medicine | clothing | shelter | equipment | vehicle | funds | other
+  description     String?
+
+  quantity        Int
+  unit            String
+
+  expiryDate      DateTime?
+  condition       String   @default("good") // new | good | fair | needs_repair
+
+  location        String
+  coordinates     Float[]  @default([0, 0])
+
+  allocated       Int      @default(0)
+  available       Int      @default(0)
+
+  sharedWithOrgs  String[] @default([])
+  availableForSharing Boolean @default(false)
+
+  status          String   @default("available") // available | low_stock | depleted | expired
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  allocations     ResourceAllocation[]
+
+  @@index([organizationId, category])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([availableForSharing])
+}
+
+// ═══════════════════════════════════════════
+// RESOURCE ALLOCATION (was sub-document in Resource)
+// ═══════════════════════════════════════════
+model ResourceAllocation {
+  id              String   @id @default(uuid())
+  resourceId      String
+  resource        Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  campaignId      String?
+  taskId          String?
+  task            Task?    @relation(fields: [taskId], references: [id])
+  quantity        Int
+  allocatedAt     DateTime @default(now())
+  returnedAt      DateTime?
+
+  @@index([resourceId])
+}
+
+// ═══════════════════════════════════════════
+// EMERGENCY EVENT
+// ═══════════════════════════════════════════
+model EmergencyEvent {
+  id              String   @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  declarationType String   // flood | earthquake | pandemic | fire | cyclone | drought | custom
+  customTypeName  String?
+  title           String
+  description     String
+  severity        String   @default("level_1") // level_1 | level_2 | level_3
+
+  // Affected area (flattened)
+  affectedAreaName       String
+  affectedAreaCoordinates Float[] @default([0, 0])
+  affectedAreaRadiusKm   Float   @default(10)
+
+  status          String   @default("active") // active | resolved | expired
+
+  activatedById   String
+  activatedBy     User     @relation("EmergencyActivator", fields: [activatedById], references: [id])
+  activatedAt     DateTime @default(now())
+  resolvedById    String?
+  resolvedBy      User?    @relation("EmergencyResolver", fields: [resolvedById], references: [id])
+  resolvedAt      DateTime?
+  resolutionNotes String?
+
+  // Auto-actions (flattened)
+  autoActionBroadcastSent   Boolean @default(false)
+  autoActionTasksCreated    Int     @default(0)
+  autoActionResourcesLocked Int     @default(0)
+  autoActionNeedsCreated    Int     @default(0)
+
+  impactSummary            String?
+  estimatedAffectedPeople  Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([status, activatedAt])
+}
+
+// ═══════════════════════════════════════════
+// FRAUD CASE
+// ═══════════════════════════════════════════
+model FraudCase {
+  id              String   @id @default(uuid())
+  caseNumber      String   @unique
+  source          String   // ai_detection | community_flag | admin_manual
+  entityType      String   // campaign | donation | user | organization
+  entityId        String
+  entityTitle     String
+
+  reportedById    String?
+  reportedBy      User?    @relation("FraudReporter", fields: [reportedById], references: [id])
+  assignedToId    String?
+  assignedTo      User?    @relation("FraudAssignee", fields: [assignedToId], references: [id])
+  organizationId  String?
+  organization    Organization? @relation("OrgFraudCases", fields: [organizationId], references: [id])
+
+  status          String   @default("open") // open | investigating | confirmed_fraud | dismissed | resolved
+  severity        String   @default("medium") // low | medium | high | critical
+
+  // AI Analysis (JSON)
+  aiAnalysis      Json?
+
+  // Resolution (flattened)
+  resolutionAction  String?
+  resolutionDetails String?
+  resolutionById    String?
+  resolutionAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  notes           FraudCaseNote[]
+
+  @@index([status, severity])
+  @@index([caseNumber])
+  @@index([entityType, entityId])
+}
+
+// ═══════════════════════════════════════════
+// FRAUD CASE NOTE (was sub-document in FraudCase)
+// ═══════════════════════════════════════════
+model FraudCaseNote {
+  id              String   @id @default(uuid())
+  fraudCaseId     String
+  fraudCase       FraudCase @relation(fields: [fraudCaseId], references: [id], onDelete: Cascade)
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+
+  authorName      String
+  content         String
+  timestamp       DateTime @default(now())
+
+  @@index([fraudCaseId])
+}
+
+// ═══════════════════════════════════════════
+// MESSAGE
+// ═══════════════════════════════════════════
+model Message {
+  id              String   @id @default(uuid())
+  conversationId  String
+  senderId        String
+  sender          User     @relation("MessageSender", fields: [senderId], references: [id])
+  recipientId     String?
+  organizationId  String?
+  organization    Organization? @relation("OrgMessages", fields: [organizationId], references: [id])
+
+  type            String   @default("direct") // direct | broadcast | emergency
+  content         String
+  attachments     String[] @default([])
+  readBy          String[] @default([])
+
+  priority        String   @default("normal") // normal | urgent | emergency
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([conversationId, createdAt])
+  @@index([recipientId, createdAt])
+  @@index([organizationId, type])
+}
+
+// ═══════════════════════════════════════════
+// SURVEY UPLOAD
+// ═══════════════════════════════════════════
+model SurveyUpload {
+  id              String   @id @default(uuid())
+  ngoId           String
+  ngo             User     @relation(fields: [ngoId], references: [id])
+
+  fileUrl         String
+  fileType        String   // image | pdf | text | csv
+  originalFileName String
+  processedData   Json?
+  status          String   @default("pending") // pending | processing | completed | failed
+  errorMessage    String?
+  uploadedAt      DateTime @default(now())
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════
+// AUDIT LOG
+// ═══════════════════════════════════════════
+model AuditLog {
+  id              String   @id @default(uuid())
+  action          String   // create | update | delete | login | escalate | emergency_activate | emergency_resolve | fraud_flag | donation
+  entity          String   // user | campaign | donation | resource | need | task | organization | emergency | fraud_case | message
+  entityId        String?
+  actorId         String
+  actor           User     @relation("AuditActor", fields: [actorId], references: [id])
+  actorName       String
+  organizationId  String?
+  organization    Organization? @relation("OrgAuditLogs", fields: [organizationId], references: [id])
+  description     String
+  before          Json?
+  after           Json?
+  ip              String?
+  userAgent       String?
+  timestamp       DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([actorId, timestamp])
+  @@index([entity, entityId])
+  @@index([organizationId, timestamp])
+  @@index([action])
+}
