@@ -19,22 +19,16 @@ async function seed() {
 
   // Clear existing data (order matters due to FKs)
   console.log('🗑️  Clearing existing data...');
-  await prisma.fraudCaseNote.deleteMany();
-  await prisma.taskApplication.deleteMany();
-  await prisma.resourceAllocation.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.fraudCase.deleteMany();
-  await prisma.emergencyEvent.deleteMany();
-  await prisma.donation.deleteMany();
-  await prisma.task.deleteMany();
-  await prisma.communityNeed.deleteMany();
-  await prisma.surveyUpload.deleteMany();
-  await prisma.campaign.deleteMany();
-  await prisma.resource.deleteMany();
-  await prisma.volunteerProfile.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.organization.deleteMany();
+  // Truncate all tables in one shot — bypasses FK ordering issues
+  await prisma.$executeRawUnsafe(`
+    TRUNCATE TABLE
+      "FraudCaseNote", "TaskApplication", "ResourceAllocation",
+      "AuditLog", "Message", "FraudCase", "EmergencyEvent",
+      "Donation", "Task", "CommunityNeed", "SurveyUpload",
+      "Campaign", "Resource", "VolunteerProfile",
+      "Organization", "User"
+    RESTART IDENTITY CASCADE
+  `);
 
   const hashedPassword = await bcrypt.hash('password123', 10);
 
