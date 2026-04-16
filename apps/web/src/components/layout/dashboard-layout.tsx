@@ -1,34 +1,24 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
 import { useTranslation, LANGUAGES } from '../../lib/i18n';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  Menu, 
-  X, 
-  Bell,
-  MapPin,
-  Briefcase,
-  Target,
-  Globe,
-  Trophy,
-  Package,
-  Heart,
-  IndianRupee,
-  MessageSquare,
-  Map,
-  Bot,
-  BarChart3,
-  Shield,
-  Mic,
-  AlertTriangle,
-  BookOpen
+import {
+  LayoutDashboard, Users, FileText, Settings, LogOut, Menu, X, Bell,
+  MapPin, Briefcase, Target, Globe, Trophy, Package, Heart, IndianRupee,
+  MessageSquare, Map, Bot, BarChart3, Shield, Mic, AlertTriangle, BookOpen,
+  Handshake, Search, Building2, Gift, TrendingUp, Star, Network
 } from 'lucide-react';
+
+const ROLE_CONFIG: Record<string, { label: string; color: string; gradientClass: string }> = {
+  platform_admin:  { label: 'Platform Admin',    color: '#818cf8', gradientClass: 'from-indigo-500 to-violet-500' },
+  ngo_coordinator: { label: 'NGO Admin',          color: '#818cf8', gradientClass: 'from-indigo-500 to-violet-500' },
+  volunteer:       { label: 'NGO Volunteer',      color: '#34d399', gradientClass: 'from-emerald-500 to-teal-500' },
+  community:       { label: 'Community Member',   color: '#fbbf24', gradientClass: 'from-amber-500 to-orange-500' },
+  donor:           { label: 'Donor',              color: '#f472b6', gradientClass: 'from-pink-500 to-rose-500' },
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,50 +47,85 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   const role = String(user?.role || '');
-  const isNgo = role === 'ngo_coordinator' || role === 'ngo_admin' || role === 'admin' || role === 'platform_admin';
 
+  // ─── NGO ADMIN NAV ────────────────────────────────────────────────────────
   const ngoNavigation = [
-    { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
-    { name: t('nav.campaigns'), href: '/dashboard/campaigns', icon: Target },
-    { name: t('nav.manageNeeds'), href: '/dashboard/needs', icon: MapPin },
-    { name: t('nav.openTasks', 'Tasks'), href: '/dashboard/tasks', icon: Briefcase },
-    { name: t('nav.processSurveys'), href: '/dashboard/surveys', icon: FileText },
-    { name: t('nav.resources'), href: '/dashboard/resources', icon: Package },
-    { name: t('nav.impactMap'), href: '/dashboard/map', icon: Map },
-    { name: t('nav.analytics'), href: '/dashboard/analytics', icon: BarChart3 },
-    { name: t('nav.donate'), href: '/dashboard/donate', icon: Heart },
-    { name: t('nav.messages'), href: '/dashboard/messages', icon: MessageSquare },
-    { name: t('nav.ngoNetwork'), href: '/dashboard/network', icon: Globe },
-    { name: t('nav.leaderboard'), href: '/dashboard/leaderboard', icon: Trophy },
-    { name: t('nav.aiAssistant'), href: '/dashboard/ai-assistant', icon: Bot },
-    { name: t('nav.emergency'), href: '/dashboard/emergency', icon: AlertTriangle },
-    { name: t('nav.adminPanel'), href: '/dashboard/admin', icon: Shield },
-    { name: t('nav.volunteers'), href: '/dashboard/volunteers', icon: Users },
-    { name: t('nav.apiDocs', 'API Docs'), href: '/dashboard/api-docs', icon: BookOpen },
+    { name: 'Overview',         href: '/dashboard',                 icon: LayoutDashboard },
+    { name: 'Campaigns',        href: '/dashboard/campaigns',       icon: Target },
+    { name: 'Community Needs',  href: '/dashboard/needs',           icon: MapPin },
+    { name: 'Tasks',            href: '/dashboard/tasks',           icon: Briefcase },
+    { name: 'Volunteers',       href: '/dashboard/volunteers',      icon: Users },
+    { name: 'Resources',        href: '/dashboard/resources',       icon: Package },
+    { name: 'Surveys',          href: '/dashboard/surveys',         icon: FileText },
+    { name: 'Donations',        href: '/dashboard/donate',          icon: IndianRupee },
+    { name: 'Analytics',        href: '/dashboard/analytics',       icon: BarChart3 },
+    { name: 'Impact Map',       href: '/dashboard/map',             icon: Map },
+    { name: 'Messages',         href: '/dashboard/messages',        icon: MessageSquare },
+    { name: 'NGO Network',      href: '/dashboard/network',         icon: Globe },
+    { name: 'AI Assistant',     href: '/dashboard/ai-assistant',    icon: Bot },
+    { name: 'Emergency',        href: '/dashboard/emergency',       icon: AlertTriangle },
+    { name: 'Fraud Detection',  href: '/dashboard/admin',           icon: Shield },
+    { name: 'API Docs',         href: '/dashboard/api-docs',        icon: BookOpen },
   ];
 
+  // ─── VOLUNTEER NAV ────────────────────────────────────────────────────────
   const volunteerNavigation = [
-    { name: t('nav.myPortal'), href: '/dashboard', icon: LayoutDashboard },
-    { name: t('nav.openTasks'), href: '/dashboard/tasks', icon: Briefcase },
-    { name: t('nav.campaigns'), href: '/dashboard/campaigns', icon: Target },
-    { name: t('nav.reportNeed'), href: '/dashboard/report-need', icon: Mic },
-    { name: t('nav.impactMap'), href: '/dashboard/map', icon: Map },
-    { name: t('nav.resources'), href: '/dashboard/resources', icon: Package },
-    { name: t('nav.donate'), href: '/dashboard/donate', icon: Heart },
-    { name: t('nav.messages'), href: '/dashboard/messages', icon: MessageSquare },
-    { name: t('nav.ngoNetwork'), href: '/dashboard/network', icon: Globe },
-    { name: t('nav.leaderboard'), href: '/dashboard/leaderboard', icon: Trophy },
-    { name: t('nav.aiAssistant'), href: '/dashboard/ai-assistant', icon: Bot },
-    { name: t('nav.myProfile'), href: '/dashboard/profile', icon: Settings },
+    { name: 'My Portal',        href: '/dashboard',                 icon: LayoutDashboard },
+    { name: 'My Tasks',         href: '/dashboard/tasks',           icon: Briefcase },
+    { name: 'Campaigns',        href: '/dashboard/campaigns',       icon: Target },
+    { name: 'Report a Need',    href: '/dashboard/report-need',     icon: Mic },
+    { name: 'Impact Map',       href: '/dashboard/map',             icon: Map },
+    { name: 'Resources',        href: '/dashboard/resources',       icon: Package },
+    { name: 'Donate',           href: '/dashboard/donate',          icon: Heart },
+    { name: 'Messages',         href: '/dashboard/messages',        icon: MessageSquare },
+    { name: 'NGO Network',      href: '/dashboard/network',         icon: Globe },
+    { name: 'Leaderboard',      href: '/dashboard/leaderboard',     icon: Trophy },
+    { name: 'AI Assistant',     href: '/dashboard/ai-assistant',    icon: Bot },
+    { name: 'My Profile',       href: '/dashboard/profile',         icon: Settings },
   ];
 
-  const navigation = isNgo ? ngoNavigation : volunteerNavigation;
+  // ─── COMMUNITY MEMBER NAV ─────────────────────────────────────────────────
+  const communityNavigation = [
+    { name: 'Discover',         href: '/dashboard',                 icon: Search },
+    { name: 'Find NGOs',        href: '/dashboard/network',         icon: Building2 },
+    { name: 'Browse Tasks',     href: '/dashboard/tasks',           icon: Briefcase },
+    { name: 'Live Needs Map',   href: '/dashboard/map',             icon: Map },
+    { name: 'Campaign',         href: '/dashboard/campaigns',       icon: Target },
+    { name: 'Report a Need',    href: '/dashboard/report-need',     icon: Mic },
+    { name: 'Donate',           href: '/dashboard/donate',          icon: Heart },
+    { name: 'Leaderboard',      href: '/dashboard/leaderboard',     icon: Trophy },
+    { name: 'AI Assistant',     href: '/dashboard/ai-assistant',    icon: Bot },
+    { name: 'My Profile',       href: '/dashboard/profile',         icon: Settings },
+  ];
+
+  // ─── DONOR NAV ────────────────────────────────────────────────────────────
+  const donorNavigation = [
+    { name: 'My Impact',        href: '/dashboard',                 icon: TrendingUp },
+    { name: 'Donate',           href: '/dashboard/donate',          icon: Heart },
+    { name: 'Campaigns',        href: '/dashboard/campaigns',       icon: Target },
+    { name: 'My Donations',     href: '/dashboard/my-donations',    icon: Gift },
+    { name: 'NGO Network',      href: '/dashboard/network',         icon: Globe },
+    { name: 'Impact Map',       href: '/dashboard/map',             icon: Map },
+    { name: 'Leaderboard',      href: '/dashboard/leaderboard',     icon: Trophy },
+    { name: 'AI Assistant',     href: '/dashboard/ai-assistant',    icon: Bot },
+    { name: 'My Profile',       href: '/dashboard/profile',         icon: Settings },
+  ];
+
+  const getNavigation = () => {
+    if (role === 'platform_admin' || role === 'ngo_coordinator' || role === 'admin') return ngoNavigation;
+    if (role === 'volunteer') return volunteerNavigation;
+    if (role === 'donor') return donorNavigation;
+    return communityNavigation; // community or unknown
+  };
+
+  const navigation = getNavigation();
+  const roleConf = ROLE_CONFIG[role] || ROLE_CONFIG['community'];
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row">
       {/* Mobile sidebar overlay bg */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -136,36 +161,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {/* User Profile Summary */}
-          <div className="p-6 border-b border-slate-700/50">
+          <div className="p-4 border-b border-slate-700/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
-                {user?.name.charAt(0).toUpperCase()}
+              <div
+                className={`w-10 h-10 rounded-full bg-gradient-to-br ${roleConf.gradientClass} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
+              >
+                {user?.name?.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-200 truncate">{user?.name}</p>
-                <p className="text-xs text-indigo-400 capitalize truncate">
-                  {user?.role.replace('_', ' ')}
+                <p className="text-sm font-semibold text-slate-200 truncate">{user?.name}</p>
+                <p className="text-xs font-medium truncate" style={{ color: roleConf.color }}>
+                  {roleConf.label}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={`
                     group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all
-                    ${isActive 
-                      ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
+                    ${isActive
+                      ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20'
                       : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}
                   `}
                 >
-                  <item.icon className={`mr-3 w-5 h-5 flex-shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                  <item.icon className={`mr-3 w-4 h-4 flex-shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
                   {item.name}
                 </Link>
               );
@@ -178,8 +205,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={() => logout()}
               className="group flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
             >
-              <LogOut className="mr-3 w-5 h-5 flex-shrink-0 text-slate-500 group-hover:text-red-400" />
-              {t('nav.signOut')}
+              <LogOut className="mr-3 w-4 h-4 flex-shrink-0 text-slate-500 group-hover:text-red-400" />
+              Sign Out
             </button>
           </div>
         </div>
@@ -197,7 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="w-6 h-6" />
           </button>
 
-          <div className="flex-1"></div>
+          <div className="flex-1" />
 
           <div className="flex items-center gap-4">
             {/* Language Switcher */}
@@ -218,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ))}
             </div>
             <button className="p-2 rounded-full text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors relative">
-              <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-500"></span>
+              <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-500" />
               <Bell className="w-5 h-5" />
             </button>
           </div>
