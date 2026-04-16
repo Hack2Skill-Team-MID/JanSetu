@@ -1,93 +1,105 @@
 <div align="center">
 
-<h1>🌉 JanSetu</h1>
-<h3>AI-Powered Smart NGO Ecosystem Platform</h3>
+# 🌉 JanSetu — Smart NGO Ecosystem Platform
 
-<p>
-  <img src="https://img.shields.io/badge/Hack2Skill-Submission-6366f1?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" />
-  <img src="https://img.shields.io/badge/Express.js-4-000000?style=for-the-badge&logo=express" />
-  <img src="https://img.shields.io/badge/MongoDB-8.0-47A248?style=for-the-badge&logo=mongodb" />
-  <img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google" />
-  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript" />
-  <img src="https://img.shields.io/badge/PWA-Offline%20First-5A0FC8?style=for-the-badge" />
-</p>
+**Connect. Collaborate. Create Impact.**
 
-<p><strong>JanSetu</strong> ("Jan" = People, "Setu" = Bridge) is a production-grade platform that unifies NGOs, volunteers, donors, and communities into one intelligent ecosystem — powered by AI to maximize every rupee and every volunteer hour.</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://typescriptlang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma)](https://prisma.io)
+[![Gemini AI](https://img.shields.io/badge/Gemini-2.0%20Flash-4285F4?logo=google)](https://ai.google.dev)
+
+> Built for **Hack2Skill Hackathon 2026** · Team MID
 
 </div>
 
 ---
 
-## 🎯 Problem Statement
+## 📖 What is JanSetu?
 
-In India, community welfare operations face critical challenges:
-- **Fragmented ecosystem** — NGOs, volunteers, donors, and communities operate in silos
-- **Unstructured data** — needs arrive as handwritten surveys, phone calls, and field reports
-- **No trust verification** — donors can't verify NGO legitimacy; fraud goes undetected
-- **Zero coordination** — during emergencies, there's no unified command and response system
+JanSetu (*"Bridge of People"*) is an AI-powered NGO ecosystem management platform that connects **NGO Admins**, **Volunteers**, **Donors**, and **Community Members** into one unified, intelligent platform.
 
-**JanSetu solves all four** with AI, real-time collaboration, and production-grade infrastructure.
+It addresses the core problem in India's social sector: **fragmented resource allocation**. NGOs work in silos, volunteers are under-utilized, donors lack transparency, and community needs go unmet.
 
----
-
-## ✨ Platform Features
-
-### Core Ecosystem (Phase 1)
-| Feature | Description |
-|---|---|
-| 🏢 **Multi-Tenant Architecture** | Each NGO gets an isolated workspace with private campaigns, resources, and volunteers |
-| 🎯 **Campaign Builder** | Rich campaign creation with milestones, funding goals, and public/private visibility |
-| 💰 **Donation Portal** | Razorpay-integrated giving with anonymous donations, impact tracking, and tax receipts |
-| 📦 **Resource Manager** | Inventory tracking with allocation, expiry alerts, and supply-demand matching |
-| 🏆 **Gamification Engine** | Points, badges, streaks, and leaderboards (weekly/monthly/all-time) |
-| 💬 **Messaging Center** | In-app conversations with broadcast capability and emergency alerts |
-| 🗺️ **Interactive Map** | Leaflet-powered crisis heatmap with NGO locations and campaign markers |
-| 🤝 **NGO Network** | Cross-organization discovery feed with trust scores and collaboration |
-
-### Intelligence Layer (Phase 2)
-| Feature | Description |
-|---|---|
-| 🤖 **AI Survey Processing** | Upload handwritten forms → Gemini NLP extracts structured needs |
-| 🧠 **Smart Volunteer Matching** | Multi-factor algorithm: skill overlap (45%) + proximity (30%) + availability (25%) |
-| 📊 **Dynamic Prioritization** | Needs ranked by urgency, population, category severity & report age |
-| 🎤 **Voice Input** | Web Speech API for voice-based need reporting |
-| 💬 **AI Chatbot** | Gemini-powered assistant for platform navigation and queries |
-| 📈 **AI Impact Reports** | Auto-generated narrative reports for campaigns |
-
-### Production Infrastructure (Phase 3)
-| Feature | Description |
-|---|---|
-| 🚨 **Emergency Mode** | One-tap disaster activation with auto-broadcasts and resource locking |
-| 🌐 **Multi-language (i18n)** | English, Hindi, Tamil with instant switching and localStorage persistence |
-| 📋 **Full Audit Trail** | Every action logged with actor, IP, timestamps, and before/after snapshots |
-| 🔍 **Fraud Escalation** | AI risk scoring, case management, investigation notes, resolution workflows |
-| 📱 **Offline-First PWA** | Service worker, IndexedDB queue, auto-replay on reconnect |
-| 📖 **API Documentation** | Interactive reference with 30+ endpoints, method badges, copy-to-clipboard |
+JanSetu solves this with:
+- 🤖 **Gemini AI** for smart matching, chatbot assistance, and fraud detection
+- 💳 **Razorpay** payment gateway for real donation processing
+- 🗺️ **Live impact map** to visualize needs and campaigns geographically
+- 🔐 **Trust scoring & fraud detection** for accountable NGO operations
+- 🚨 **Emergency mode** for rapid disaster response
+- 🏆 **Gamification** to keep volunteers engaged
 
 ---
 
-## 🏗️ Architecture
+## 🎭 4 Role-Based Portals
+
+| Role | Access | Key Features |
+|------|--------|--------------|
+| 🏢 **NGO Admin** | `/login?role=ngo_coordinator` | Campaigns, Volunteers, Resources, Analytics, Fraud Detection, Emergency Mode |
+| 🤝 **Volunteer** | `/login?role=volunteer` | My Tasks, AI Matching, Leaderboard, Badges, Messages |
+| 🌍 **Community Member** | `/login?role=community` | Discover NGOs, Report Needs, Browse Tasks, Live Map |
+| ❤️ **Donor** | `/login?role=donor` | Donate, My Impact, Campaign Browser, Donation History |
+
+---
+
+## 🔑 Demo Credentials
+
+> All passwords: **`password123`**
+
+| Role | Email |
+|------|-------|
+| Platform Admin | `admin@jansetu.org` |
+| NGO Admin | `priya@helpindia.org` |
+| NGO Admin 2 | `kavitha@sahayatrust.org` |
+| Volunteer | `rohit@gmail.com` |
+| Community Member | `sneha@gmail.com` |
+| Donor | `vikram@gmail.com` |
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 16** (App Router, Turbopack)
+- **TypeScript** with Zustand state management
+- **Vanilla CSS** + glassmorphism design system
+- **Leaflet** for interactive maps
+- **Lucide React** icons
+
+### Backend
+- **Express.js v5** with TypeScript
+- **Prisma ORM v7** with `PrismaPg` adapter
+- **PostgreSQL 16** (connection pooling via `pg`)
+- **JWT** authentication with `bcryptjs`
+- **Razorpay SDK** (dual mode: live + demo)
+- **@google/generative-ai** (Gemini 2.0 Flash)
+
+### Infrastructure
+- **Turborepo** monorepo
+- **GitHub Actions** CI pipeline
+- Offline-first with **IndexedDB** request queuing
+- Multi-language: **English, Hindi, Tamil**
+
+---
+
+## 🗂️ Project Structure
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                           JANSETU MONOREPO                           │
-│                                                                       │
-│  ┌────────────────┐    REST API     ┌──────────────────────────────┐  │
-│  │   Next.js 16   │ ─────────────► │    Express.js + MongoDB       │  │
-│  │   (Port 3000)  │                │       (Port 5000)             │  │
-│  │                │                │                                │  │
-│  │  • 15+ Pages   │                │  • 17 Route Files (80+ APIs)  │  │
-│  │  • PWA + SW    │                │  • 12 Mongoose Models         │  │
-│  │  • i18n (3 lang)│                │  • Audit Middleware           │  │
-│  │  • IndexedDB   │                │  • JWT + Role Auth            │  │
-│  │  • Zustand     │                │                                │  │
-│  └────────────────┘                │  ┌────────────────────────┐    │  │
-│                                    │  │   AI Bridge Service    │    │  │
-│                                    │  │   (Gemini API calls)   │    │  │
-│                                    │  └────────────────────────┘    │  │
-│                                    └───────────────────────────────┘  │
-└───────────────────────────────────────────────────────────────────────┘
+jansetu/
+├── apps/
+│   ├── web/              # Next.js 16 frontend
+│   └── ai-service/       # Python FastAPI AI service (optional)
+├── server/               # Express.js backend API
+│   ├── src/
+│   │   ├── routes/       # 17 API route modules
+│   │   ├── middleware/   # Auth, error handling
+│   │   ├── services/     # AI bridge, Razorpay
+│   │   └── scripts/      # Database seed
+│   └── prisma/           # Prisma schema (16 models)
+└── packages/
+    └── shared/           # Shared TypeScript types
 ```
 
 ---
@@ -95,148 +107,203 @@ In India, community welfare operations face critical challenges:
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB (local or [Atlas](https://cloud.mongodb.com))
-- Gemini API Key ([Get free key](https://aistudio.google.com))
+- Node.js 20+
+- PostgreSQL 16
+- npm 9+
 
 ### 1. Clone & Install
-
 ```bash
-git clone https://github.com/agrawalishan2005/jansetu.git
-cd jansetu
+git clone https://github.com/Hack2Skill-Team-MID/JanSetu.git
+cd JanSetu
+npm install
 ```
 
 ### 2. Configure Environment
-
 ```bash
-# Create .env in project root
 cp .env.example .env
 ```
 
-Required variables:
+Edit `.env`:
 ```env
-MONGODB_URI=mongodb://localhost:27017/jansetu
-JWT_SECRET=your-secret-key
+# Database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/jansetu
+
+# Auth
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Razorpay (optional — runs in demo mode without keys)
+RAZORPAY_KEY_ID=rzp_test_xxx
+RAZORPAY_KEY_SECRET=xxx
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxx
+
+# Gemini AI (optional — falls back to smart static responses)
 GEMINI_API_KEY=your-gemini-api-key
-PORT=5000
 ```
 
-### 3. Start Backend
-
+### 3. Setup Database
 ```bash
-cd server
-npm install
-npm run dev
-# ✅ Running on http://localhost:5000
-```
+# Create database
+createdb jansetu
 
-### 4. Seed Demo Data
+# Run migrations
+cd server && npx prisma migrate deploy
 
-```bash
-cd server
+# Seed with demo data
 npm run seed
 ```
 
-This creates **8 users, 2 NGOs, 4 campaigns, 5 needs, 5 donations, 1 emergency, 2 fraud cases, and audit logs**.
+### 4. Start Development Servers
 
-### 5. Start Frontend
-
+**Terminal 1 — Backend:**
 ```bash
-cd apps/web
-npm install
-npm run dev
-# ✅ Running on http://localhost:3000
+cd server && npm run dev
+# Runs on http://localhost:5000
 ```
 
-### Demo Accounts (password: `password123`)
-
-| Email | Role | Description |
-|---|---|---|
-| `admin@jansetu.org` | Platform Admin | Full platform oversight |
-| `priya@helpindia.org` | NGO Admin | HelpIndia Foundation (Maharashtra) |
-| `kavitha@sahayatrust.org` | NGO Admin | Sahaya Trust (Tamil Nadu) |
-| `rohit@gmail.com` | Volunteer | Engineering student, 450 pts |
-| `sneha@gmail.com` | Volunteer | Healthcare volunteer, 780 pts |
-| `vikram@gmail.com` | Donor | Entrepreneur & philanthropist |
-| `meera@gmail.com` | Donor | Corporate CSR coordinator |
-
----
-
-## 📡 API Reference
-
-**Base URL:** `http://localhost:5000/api`
-
-All responses follow: `{ success: boolean, data?: any, error?: string }`
-
-Interactive API docs available at: `/dashboard/api-docs`
-
-### Key Endpoint Groups
-
-| Group | Endpoints | Auth |
-|---|---|---|
-| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Public / JWT |
-| Campaigns | CRUD + donate, milestones, AI impact reports | JWT |
-| Needs | CRUD + priority scoring, AI survey processing | JWT |
-| Resources | CRUD + AI matching to needs | JWT |
-| Tasks | CRUD + apply, accept/reject volunteers | JWT |
-| Donations | Initiate + verify + history + impact reports | JWT |
-| Emergency | Activate, resolve, broadcast, history | Admin |
-| Audit | Paginated logs, entity/user tracking, stats | Admin |
-| Fraud | Case CRUD, notes, assign, resolve, stats | Admin |
-| Messages | Conversations, send, broadcast | JWT |
-| Network | NGO discovery, trust scores, collaboration | JWT |
-| Gamification | Points, badges, leaderboard | JWT |
-
----
-
-## 📁 Project Structure
-
-```
-jansetu/
-├── apps/
-│   └── web/                          # Next.js Frontend
-│       ├── src/app/                  # 15+ page routes
-│       ├── src/components/           # Shared components
-│       ├── src/lib/                  # API client, i18n, offline-queue
-│       ├── src/locales/              # EN, Hindi, Tamil translations
-│       ├── src/store/                # Zustand state management
-│       └── public/                   # PWA assets (SW, manifest, icons)
-├── server/                           # Express.js Backend
-│   ├── src/models/                   # 12 Mongoose models
-│   ├── src/routes/                   # 17 route files (80+ endpoints)
-│   ├── src/middleware/               # Auth, audit logging
-│   ├── src/services/                 # AI bridge service
-│   └── src/scripts/                  # Database seeder
-└── packages/
-    └── shared/                       # Shared TypeScript types
+**Terminal 2 — Frontend:**
+```bash
+cd apps/web && npm run dev
+# Runs on http://localhost:3000
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🌐 API Reference
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 16, React 19, Tailwind CSS 4, Zustand, Axios, Lucide React, Recharts, Leaflet |
-| **Backend** | Express.js 4, TypeScript 5, Mongoose 8, JWT, Zod, bcryptjs, Socket.io |
-| **AI Engine** | Google Gemini API (via AI Bridge Service) |
-| **Database** | MongoDB 8.0 (local / Atlas) |
-| **PWA** | Service Worker, IndexedDB, Web App Manifest |
-| **i18n** | Custom provider (EN, Hindi, Tamil) |
-| **Monorepo** | npm workspaces, shared TypeScript package |
+The platform exposes **30+ REST endpoints** across 17 route modules:
+
+| Module | Base Path | Description |
+|--------|-----------|-------------|
+| Auth | `/api/auth` | Login, register, me |
+| Campaigns | `/api/campaigns` | CRUD + donate |
+| Donations | `/api/donations` | Initiate, verify (Razorpay) |
+| Tasks | `/api/tasks` | CRUD + apply |
+| Volunteers | `/api/volunteers` | Profiles + AI matching |
+| Needs | `/api/needs` | Community needs CRUD |
+| Resources | `/api/resources` | Inventory + alerts |
+| Emergency | `/api/emergency` | Declare + resolve |
+| Gamification | `/api/gamification` | Points, badges, leaderboard |
+| AI Bridge | `/api/ai-bridge` | Gemini chatbot + insights |
+| Admin | `/api/admin` | Fraud cases, audit logs |
+| Dashboard | `/api/dashboard` | Aggregated stats |
+| Network | `/api/network` | NGO discovery |
+| Messages | `/api/messages` | Inter-user messaging |
+| Analytics | `/api/analytics` | Impact metrics |
+| Surveys | `/api/surveys` | Upload + AI processing |
+
+Full documentation available at **`/dashboard/api-docs`** after login.
+
+---
+
+## 💳 Payment Integration
+
+JanSetu uses **Razorpay** with automatic mode detection:
+
+```
+RAZORPAY_KEY_ID set → Live Mode (real payment modal)
+No key configured  → Demo Mode (instant auto-verification)
+```
+
+Both modes complete the full donation flow including:
+- Order creation
+- Payment verification (HMAC-SHA256 in live mode)
+- Database update
+- Audit log entry
+
+---
+
+## 🤖 AI Features
+
+| Feature | Powered By | Description |
+|---------|-----------|-------------|
+| **AI Chatbot** | Gemini 2.0 Flash | Role-aware assistant for NGO operations |
+| **Volunteer Matching** | Gemini scoring | Skill + location + availability matching |
+| **Fraud Detection** | Risk scoring | Flagging suspicious donation patterns |
+| **Impact Reports** | Gemini | Auto-generated campaign narratives |
+| **Need Prioritization** | ML scoring | Urgency × affected population ranking |
+
+---
+
+## 🚨 Emergency Mode
+
+NGO Admins can declare emergencies with one click:
+- 🔔 Broadcasts to all organization members
+- 🔴 Red banner appears across all user dashboards
+- 📋 Auto-creates critical community needs
+- 🔒 Priority-locks relevant resources
+
+---
+
+## 🏆 Gamification System
+
+Volunteers earn **points**, **badges**, and **reputation scores**:
+
+- `first_task` — Complete your first task
+- `five_tasks` — Complete 5 tasks
+- `crisis_responder` — Respond to emergency tasks
+- `top_donor` — Donate consistently
+- `team_player` — Collaborate with 5+ volunteers
+- `mentor` — Help onboard new volunteers
+
+---
+
+## 🔒 Security Features
+
+- JWT authentication with 7-day expiration
+- bcrypt password hashing (10 rounds)
+- HMAC-SHA256 Razorpay signature verification
+- Complete **audit trail** — every action logged
+- AI-powered **fraud detection** with case management
+- Role-based access control (RBAC)
+- Auto-logout on 401 (stale token protection)
+
+---
+
+## 🌍 Internationalization
+
+Full support for **3 languages** with instant switching:
+
+- 🇬🇧 English
+- 🇮🇳 Hindi (हिंदी)
+- 🇮🇳 Tamil (தமிழ்)
+
+---
+
+## 📱 Progressive Web App
+
+- Installable on Android/iOS
+- **Offline-first**: Failed requests queued in IndexedDB
+- Auto-replayed when connectivity returns
+- Service worker caching for static assets
+
+---
+
+## 🗃️ Database Schema
+
+16 Prisma models covering:
+
+```
+User → Organization → Campaign → Donation
+                   ↓              ↓
+              VolunteerProfile   AuditLog
+              Task → TaskApplication
+              Resource → ResourceAllocation
+              CommunityNeed → SurveyUpload
+              EmergencyEvent
+              FraudCase → FraudCaseNote
+              Message | Gamification
+```
 
 ---
 
 ## 👥 Team MID
 
-| Member | Role | Focus |
-|---|---|---|
-| **Ishan Agrawal** | Full-Stack Lead | Architecture, Backend, AI Integration, Phase 3 |
-| **Teammate 2** | Frontend Dev | UI/UX, Dashboard, Interactive Pages |
-| **Teammate 3** | AI/ML Dev | NLP Processing, Matching Algorithms |
+Built with ❤️ for **Hack2Skill Hackathon 2026**
+
+> *"Technology in service of humanity"*
 
 ---
 
-## 📜 License
+## 📄 License
 
-MIT © JanSetu Team — Hack2Skill 2026
+MIT License — see [LICENSE](LICENSE) for details.
