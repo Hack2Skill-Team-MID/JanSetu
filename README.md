@@ -147,15 +147,17 @@ jansetu/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL 16
-- npm 9+
+- **Node.js 20+** — [download](https://nodejs.org)
+- **PostgreSQL 16** — [download](https://www.postgresql.org/download/)
+- **npm 9+** (comes with Node.js)
 
 ### 1. Clone & Install
 ```bash
 git clone https://github.com/Hack2Skill-Team-MID/JanSetu.git
 cd JanSetu
-npm install
+npm install                          # installs root + all workspace deps
+cd server && npm install && cd ..    # ensure server deps are installed
+cd apps/web && npm install && cd ../..
 ```
 
 ### 2. Configure Environment
@@ -163,50 +165,140 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` with your values (**minimum required** to run locally):
 ```env
-# Database (required)
-DATABASE_URL=postgresql://postgres:password@localhost:5432/jansetu
+# Database (required) — create DB first: createdb jansetu
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/jansetu
 
-# Auth (required)
-JWT_SECRET=your-super-secret-jwt-key-here
+# Auth (required — can be any random string for local dev)
+JWT_SECRET=jansetu-local-dev-secret-2026
 
-# Razorpay (optional — auto-runs in demo mode without keys)
-RAZORPAY_KEY_ID=rzp_test_xxx
-RAZORPAY_KEY_SECRET=xxx
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxx
+# Frontend API URL (keep as-is for local dev)
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
-# Gemini AI (optional — uses rich offline fallback without key)
-GEMINI_API_KEY=your-gemini-api-key   # Get free at aistudio.google.com
+# Razorpay (OPTIONAL — skipping enables auto Demo Mode)
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+NEXT_PUBLIC_RAZORPAY_KEY_ID=
+
+# Gemini AI (OPTIONAL — skipping uses rich offline fallback responses)
+GEMINI_API_KEY=    # Free key at: https://aistudio.google.com
 ```
 
-### 3. Setup Database
+### 3. Setup Database & Seed Demo Data
 ```bash
-# Create the database
+# Step 1 — Create the PostgreSQL database
 createdb jansetu
 
-# Run migrations
-cd server && npx prisma migrate deploy
+# Step 2 — Run Prisma migrations (creates all 17 tables)
+cd server
+npx prisma migrate deploy
 
-# Seed with demo data (8 users, 2 orgs, 4 campaigns, etc.)
+# Step 3 — Seed with full demo dataset
 npm run seed
+```
+
+**Expected seed output:**
+```
+🌱 Connecting to PostgreSQL...
+✅ Connected
+🗑️  Clearing existing data...
+👤 Creating users...
+🏢 Creating organizations...
+🎯 Creating campaigns...
+📋 Creating community needs...
+💰 Creating donations...
+🚨 Creating active emergency...
+🔍 Creating fraud cases...
+📋 Creating audit logs...
+
+✅ SEED COMPLETE!
+📊 Seeded: 8 users, 2 orgs, 4 campaigns, 5 needs, 5 donations, 1 emergency, 2 fraud cases, 8 audit logs
 ```
 
 ### 4. Start Development Servers
 
-**Terminal 1 — Backend:**
+Open **two terminals**:
+
+**Terminal 1 — Backend API (port 5000):**
 ```bash
 cd server && npm run dev
-# Runs on http://localhost:5000
 ```
 
-**Terminal 2 — Frontend:**
+**Terminal 2 — Frontend (port 3000):**
 ```bash
 cd apps/web && npm run dev
-# Runs on http://localhost:3000
 ```
 
+Then open **http://localhost:3000** and log in with any demo credential below.
+
 ---
+
+## 🧪 Demo Data — What Gets Seeded
+
+Run `cd server && npm run seed` to populate the database with realistic demo data:
+
+### 👥 Demo Accounts (all passwords: `password123`)
+
+| Role | Email | Description |
+|------|-------|-------------|
+| 🔐 **Platform Admin** | `admin@jansetu.org` | Full access — fraud detection, audit logs, emergency |
+| 🏢 **NGO Admin 1** | `priya@helpindia.org` | HelpIndia Foundation — Maharashtra campaigns |
+| 🏢 **NGO Admin 2** | `kavitha@sahayatrust.org` | Sahaya Trust — Tamil Nadu campaigns |
+| 🤝 **Volunteer 1** | `rohit@gmail.com` | Skills: teaching, first-aid, driving · Points: 450 |
+| 🤝 **Volunteer 2** | `sneha@gmail.com` | Skills: healthcare, counseling · Points: 780 |
+| 🤝 **Volunteer 3** | `arjun@gmail.com` | Skills: technology, web-dev · Points: 320 |
+| ❤️ **Donor 1** | `vikram@gmail.com` | Has 3 completed donations |
+| ❤️ **Donor 2** | `meera@gmail.com` | Has 2 completed donations |
+
+### 🏢 Organizations
+
+| Name | Region | Trust Score | Focus |
+|------|--------|-------------|-------|
+| HelpIndia Foundation | Maharashtra | 87 (Gold) | Water, Education |
+| Sahaya Trust | Tamil Nadu | 92 (Platinum) | Healthcare, Disaster Relief |
+
+### 🎯 Campaigns (4 active)
+
+| Campaign | Category | Goal | Raised |
+|----------|----------|------|--------|
+| Clean Water for Dharavi 2026 | Water & Sanitation | ₹5,00,000 | ₹2,85,000 (57%) |
+| Digital Literacy for Rural Schools | Education | ₹8,00,000 | ₹1,20,000 (15%) |
+| Women Health Camps — Chennai | Healthcare | ₹3,00,000 | ₹2,20,000 (73%) |
+| Cyclone Preparedness — Coastal TN | Disaster Relief | ₹12,00,000 | ₹3,40,000 (28%) |
+
+### 📋 Community Needs (5 reported)
+
+- Critical: Water supply disrupted — Kothrud, Pune (800 affected)
+- Critical: Flood damage — Nagapattinam (250 affected)
+- High: Elderly care — Mylapore, Chennai (15 affected)
+- High: Child malnutrition — Yavatmal (3,000 affected)
+- Medium: School blackboard repair — Hadapsar, Pune
+
+### 💰 Donations (5 completed)
+
+- ₹25,000 · Vikram → Clean Water Campaign
+- ₹15,000 · Vikram → Women Health Camps
+- ₹50,000 · Meera → Clean Water Campaign (CSR)
+- ₹1,00,000 · Meera → Cyclone Preparedness
+- ₹10,000 · Vikram → Digital Literacy (recurring)
+
+### 🚨 Emergency Event (1 active)
+
+- **Chennai Coastal Flooding — April 2026** (Severity: Level 2)
+- 12,000 people affected · Auto-broadcast sent
+
+### 🔍 Fraud Cases (2)
+
+- FRAUD-2026-0001 · Medium · Suspicious donation velocity (investigating)
+- FRAUD-2026-0002 · Low · Fake volunteer hours (dismissed)
+
+### 📋 Audit Logs (8 events)
+
+Covers: org creation, campaign creation, donations, emergency declaration, fraud flagging, admin logins.
+
+---
+
 
 ## 🌐 API Reference
 
