@@ -390,7 +390,7 @@ function AppNavbar() {
 function DashboardInner({ children }: { children: React.ReactNode }) {
   const { isOpen } = useSidebar();
   return (
-    <div className="min-h-screen bg-background flex flex-col dark">
+    <div className="min-h-screen bg-background flex flex-col">
       <AppNavbar />
       <div className="flex flex-1 pt-16 overflow-hidden">
         <AppSidebar />
