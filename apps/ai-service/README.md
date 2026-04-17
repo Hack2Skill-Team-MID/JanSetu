@@ -4,7 +4,7 @@
 # This is the AI/ML microservice for JanSetu.
 # Built with FastAPI + Google Gemini API
 #
-# Owned by: AI/ML Dev (Teammate 3)
+# Owned by: AI/ML Dev (Divyansh Parihar)
 # ============================================
 
 ## Setup
