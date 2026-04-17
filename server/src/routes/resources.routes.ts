@@ -28,32 +28,11 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/resources
-router.get('/', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const { category, status } = req.query;
-    const where: any = { organizationId: user.organizationId };
-
-    if (category) where.category = category;
-    if (status) where.status = status;
-
-    const resources = await prisma.resource.findMany({
-      where,
-      orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }],
-    });
-    res.json({ success: true, data: resources.map((r: any) => ({ ...r, _id: r.id })) });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// GET /api/resources/alerts
+// GET /api/resources/alerts  ← MUST be before /:id
 router.get('/alerts', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
 
-    // Users without an org have no resource alerts
     if (!user.organizationId) {
       return res.json({ success: true, data: { expiringSoon: [], lowStock: [], expired: [], totalAlerts: 0 } });
     }
@@ -62,10 +41,7 @@ router.get('/alerts', authMiddleware, async (req: Request, res: Response) => {
 
     const [expiring, lowStock, expired] = await Promise.all([
       prisma.resource.findMany({
-        where: {
-          organizationId: user.organizationId,
-          expiryDate: { lte: sevenDays, gt: new Date() },
-        },
+        where: { organizationId: user.organizationId, expiryDate: { lte: sevenDays, gt: new Date() } },
       }),
       prisma.resource.findMany({ where: { organizationId: user.organizationId, status: 'low_stock' } }),
       prisma.resource.findMany({ where: { organizationId: user.organizationId, status: 'expired' } }),
@@ -85,6 +61,80 @@ router.get('/alerts', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/resources/dashboard  ← MUST be before /:id
+router.get('/dashboard', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const resources = await prisma.resource.findMany({
+      where: { organizationId: user.organizationId || undefined },
+    });
+
+    const byCategory = resources.reduce((acc: any, r) => {
+      acc[r.category] = (acc[r.category] || 0) + r.available;
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        totalResources: resources.length,
+        totalValue: resources.reduce((s, r) => s + r.quantity, 0),
+        allocated: resources.reduce((s, r) => s + r.allocated, 0),
+        available: resources.reduce((s, r) => s + r.available, 0),
+        byCategory,
+        alerts: resources.filter(r => r.status !== 'available').length,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/resources/shared  ← MUST be before /:id
+router.get('/shared', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const shared = await prisma.resource.findMany({
+      where: {
+        availableForSharing: true,
+        organizationId: user.organizationId ? { not: user.organizationId } : undefined,
+        status: 'available',
+      },
+      include: { organization: { select: { id: true, name: true, slug: true, region: true } } },
+      take: 20,
+    });
+
+    const mapped = shared.map((r: any) => ({
+      ...r, _id: r.id,
+      organizationId: r.organization ? { ...r.organization, _id: r.organization.id } : r.organizationId,
+    }));
+
+    res.json({ success: true, data: mapped });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/resources
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { category, status } = req.query;
+    const where: any = {};
+    if (user.organizationId) where.organizationId = user.organizationId;
+    if (category) where.category = category;
+    if (status) where.status = status;
+
+    const resources = await prisma.resource.findMany({
+      where,
+      orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }],
+    });
+    res.json({ success: true, data: resources.map((r: any) => ({ ...r, _id: r.id })) });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /api/resources/:id/allocate
 router.post('/:id/allocate', authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -96,12 +146,10 @@ router.post('/:id/allocate', authMiddleware, async (req: Request, res: Response)
       return res.status(400).json({ success: false, error: `Only ${resource.available} ${resource.unit} available.` });
     }
 
-    // Create allocation record
     await prisma.resourceAllocation.create({
       data: { resourceId: resource.id, campaignId, taskId, quantity },
     });
 
-    // Update resource counts & status
     const newAllocated = resource.allocated + quantity;
     const newAvailable = resource.quantity - newAllocated;
     let newStatus = 'available';
@@ -132,57 +180,4 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/resources/dashboard
-router.get('/dashboard', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const resources = await prisma.resource.findMany({ where: { organizationId: user.organizationId } });
-
-    const byCategory = resources.reduce((acc: any, r) => {
-      acc[r.category] = (acc[r.category] || 0) + r.available;
-      return acc;
-    }, {});
-
-    res.json({
-      success: true,
-      data: {
-        totalResources: resources.length,
-        totalValue: resources.reduce((s, r) => s + r.quantity, 0),
-        allocated: resources.reduce((s, r) => s + r.allocated, 0),
-        available: resources.reduce((s, r) => s + r.available, 0),
-        byCategory,
-        alerts: resources.filter(r => r.status !== 'available').length,
-      },
-    });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// GET /api/resources/shared
-router.get('/shared', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const shared = await prisma.resource.findMany({
-      where: {
-        availableForSharing: true,
-        organizationId: { not: user.organizationId },
-        status: 'available',
-      },
-      include: { organization: { select: { id: true, name: true, slug: true, region: true } } },
-      take: 20,
-    });
-
-    const mapped = shared.map((r: any) => ({
-      ...r, _id: r.id,
-      organizationId: r.organization ? { ...r.organization, _id: r.organization.id } : r.organizationId,
-    }));
-
-    res.json({ success: true, data: mapped });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 export default router;
-

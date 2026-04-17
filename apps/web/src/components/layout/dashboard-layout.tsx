@@ -25,6 +25,7 @@ import {
   MapPin, Target, Mic, Star, X, Package, Globe, FileText, Briefcase,
   IndianRupee, TrendingUp, Gift,
 } from 'lucide-react';
+import ThemePicker from '../theme/ThemePicker';
 
 // Role-based navigation config
 const ROLE_NAV: Record<string, { name: string; href: string; icon: any }[]> = {
@@ -345,6 +346,11 @@ function AppNavbar() {
 
           {/* Notifications */}
           <NotificationBell />
+
+          {/* Theme Picker */}
+          <div className="relative">
+            <ThemePicker />
+          </div>
 
           {/* Role badge */}
           <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground">

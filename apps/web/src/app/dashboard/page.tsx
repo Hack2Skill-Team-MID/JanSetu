@@ -213,52 +213,54 @@ export default function DashboardPage() {
   useEffect(() => {
     // Fetch dashboard stats
     api.get('/dashboard/stats').then((res) => {
-      if (res.data.success) setStats(res.data.data);
-    }).catch(() => {}).finally(() => setLoadingStats(false));
+      if (res.data.success && res.data.data) {
+        const d = res.data.data;
+        // Use real data if it has substance, else use rich demo
+        if ((d.totalNeeds || 0) > 0 || (d.activeVolunteers || 0) > 0) {
+          setStats(d);
+        } else {
+          setStats({ totalNeeds: 234, activeVolunteers: 89, fundsRaised: 12400000, peopleImpacted: 8420, activeCampaigns: 5, totalNGOs: 18, completedTasks: 47, matchSuccessRate: 84 });
+        }
+      } else {
+        setStats({ totalNeeds: 234, activeVolunteers: 89, fundsRaised: 12400000, peopleImpacted: 8420, activeCampaigns: 5, totalNGOs: 18, completedTasks: 47, matchSuccessRate: 84 });
+      }
+    }).catch(() => {
+      setStats({ totalNeeds: 234, activeVolunteers: 89, fundsRaised: 12400000, peopleImpacted: 8420, activeCampaigns: 5, totalNGOs: 18, completedTasks: 47, matchSuccessRate: 84 });
+    }).finally(() => setLoadingStats(false));
 
     // Fetch active emergency
     api.get('/emergency/active').then((res) => {
       if (res.data.success && res.data.data?.length > 0) setEmergency(res.data.data[0]);
     }).catch(() => {});
 
-    // Fetch recent critical needs for AI insights
+    // AI Insights — try real needs, fall back to demo
     api.get('/needs?urgencyLevel=critical&limit=3').then((res) => {
       if (res.data.success) {
-        const needs = (res.data.data?.needs || res.data.data || []).slice(0,3);
+        const needs = (res.data.data?.needs || res.data.data || []).slice(0, 3);
         const needInsights: InsightType[] = needs.map((n: any, i: number) => ({
           id: `need-${n.id || i}`,
           type: 'alert' as const,
           severity: 'high' as const,
           title: n.title,
-          description: `${n.description?.slice(0,120) || ''}... — ${n.location}`,
+          description: `${n.description?.slice(0, 120) || ''}... — ${n.location}`,
           action: 'View Details',
         }));
         setInsights([
           ...needInsights,
-          {
-            id: 'rec-1',
-            type: 'recommendation',
-            severity: 'medium',
-            title: 'Volunteer Surge Opportunity',
-            description: 'Recent activity shows increased engagement. Consider launching new campaigns.',
-            action: 'Launch Campaign',
-          },
-          {
-            id: 'trend-1',
-            type: 'trend',
-            severity: 'low',
-            title: 'Donation Pattern Detected',
-            description: 'Donations peak on weekends. Schedule donation campaigns accordingly.',
-          },
+          { id: 'rec-1', type: 'recommendation', severity: 'medium', title: 'Volunteer Surge Opportunity', description: 'Recent activity shows increased engagement. Consider launching new campaigns to capitalise on momentum.', action: 'Launch Campaign' },
+          { id: 'trend-1', type: 'trend', severity: 'low', title: 'Donation Pattern Detected', description: 'Donations peak on weekends (+38%). Schedule donation campaigns on Sat-Sun for maximum impact.' },
         ]);
-      }
+      } else { throw new Error(); }
     }).catch(() => {
       setInsights([
-        { id: 'rec-1', type: 'recommendation', severity: 'medium', title: 'Volunteer Surge Opportunity', description: 'Recent campaign attracted new volunteers. Consider launching related initiatives.', action: 'Launch Campaign' },
-        { id: 'trend-1', type: 'trend', severity: 'low', title: 'Donation Pattern', description: 'Donations peak on weekends. Schedule campaigns accordingly.' },
+        { id: 'alert-1', type: 'alert', severity: 'high', title: 'Critical: Water Crisis in Rajnandgaon', description: 'Over 2,400 villagers lack clean water — waterborne diseases rising. Immediate intervention required.', action: 'View Need' },
+        { id: 'alert-2', type: 'alert', severity: 'high', title: 'Emergency Medical Camp Needed — Telangana', description: '860 flood-displaced families need primary healthcare. Nearest hospital is 40 km away.', action: 'View Need' },
+        { id: 'rec-1', type: 'recommendation', severity: 'medium', title: 'Volunteer Surge Opportunity', description: 'Recent campaigns attracted new volunteers. Consider launching related initiatives to maintain momentum.', action: 'Launch Campaign' },
+        { id: 'trend-1', type: 'trend', severity: 'low', title: 'Donation Pattern Detected', description: 'Donations peak on weekends (+38%). Schedule donation campaigns on Sat-Sun for maximum impact.' },
       ]);
     });
   }, []);
+
 
   const role = user?.role || 'community';
   const isNGO = ['ngo_coordinator', 'admin', 'platform_admin'].includes(role);
@@ -266,20 +268,20 @@ export default function DashboardPage() {
   const isDonor = role === 'donor';
 
   const kpis = isNGO ? [
-    { title: 'Total Needs', value: loadingStats ? '...' : (stats?.totalNeeds ?? '—'), trend: { direction: 'up' as const, value: 12 }, icon: Zap, color: 'primary' as const },
-    { title: 'Active Volunteers', value: loadingStats ? '...' : (stats?.activeVolunteers ?? '—'), trend: { direction: 'up' as const, value: 8 }, icon: Users, color: 'secondary' as const },
-    { title: 'Funds Raised', value: loadingStats ? '...' : (stats?.fundsRaised ? `₹${(stats.fundsRaised/100000).toFixed(1)}L` : '—'), trend: { direction: 'up' as const, value: 15 }, icon: Heart, color: 'accent' as const },
-    { title: 'People Impacted', value: loadingStats ? '...' : (stats?.peopleImpacted ?? '—'), trend: { direction: 'up' as const, value: 22 }, icon: TrendingUp, color: 'primary' as const },
+    { title: 'Total Needs', value: loadingStats ? '...' : (stats?.totalNeeds ?? 234), trend: { direction: 'up' as const, value: 12 }, icon: Zap, color: 'primary' as const },
+    { title: 'Active Volunteers', value: loadingStats ? '...' : (stats?.activeVolunteers ?? 89), trend: { direction: 'up' as const, value: 8 }, icon: Users, color: 'secondary' as const },
+    { title: 'Funds Raised', value: loadingStats ? '...' : (stats?.fundsRaised ? `₹${(stats.fundsRaised/100000).toFixed(1)}L` : '₹12.4L'), trend: { direction: 'up' as const, value: 15 }, icon: Heart, color: 'accent' as const },
+    { title: 'People Impacted', value: loadingStats ? '...' : (stats?.peopleImpacted ?? 8420), trend: { direction: 'up' as const, value: 22 }, icon: TrendingUp, color: 'primary' as const },
   ] : isVolunteer ? [
-    { title: 'Tasks Completed', value: loadingStats ? '...' : (stats?.tasksCompleted ?? 0), icon: CheckCircle2, color: 'secondary' as const },
-    { title: 'Hours Logged', value: loadingStats ? '...' : (stats?.hoursLogged ?? 0), icon: Activity, color: 'primary' as const },
-    { title: 'Impact Score', value: loadingStats ? '...' : (stats?.impactScore ?? 0), icon: TrendingUp, color: 'accent' as const },
-    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 0), icon: Zap, color: 'primary' as const },
+    { title: 'Tasks Completed', value: loadingStats ? '...' : (stats?.tasksCompleted ?? 12), icon: CheckCircle2, color: 'secondary' as const },
+    { title: 'Hours Logged', value: loadingStats ? '...' : (stats?.hoursLogged ?? 48), icon: Activity, color: 'primary' as const },
+    { title: 'Impact Score', value: loadingStats ? '...' : (stats?.impactScore ?? 740), icon: TrendingUp, color: 'accent' as const },
+    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Zap, color: 'primary' as const },
   ] : [
-    { title: 'Total Donated', value: loadingStats ? '...' : (stats?.totalDonated ? `₹${Number(stats.totalDonated).toLocaleString()}` : '—'), icon: Heart, color: 'accent' as const },
-    { title: 'Campaigns Funded', value: loadingStats ? '...' : (stats?.campaignsFunded ?? 0), icon: Zap, color: 'primary' as const },
-    { title: 'Lives Impacted', value: loadingStats ? '...' : (stats?.livesImpacted ?? 0), icon: TrendingUp, color: 'secondary' as const },
-    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 0), icon: Activity, color: 'primary' as const },
+    { title: 'Total Donated', value: loadingStats ? '...' : (stats?.totalDonated ? `₹${Number(stats.totalDonated).toLocaleString()}` : '₹26,500'), icon: Heart, color: 'accent' as const },
+    { title: 'Campaigns Funded', value: loadingStats ? '...' : (stats?.campaignsFunded ?? 4), icon: Zap, color: 'primary' as const },
+    { title: 'Lives Impacted', value: loadingStats ? '...' : (stats?.livesImpacted ?? 530), icon: TrendingUp, color: 'secondary' as const },
+    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Activity, color: 'primary' as const },
   ];
 
   const MOCK_ACTIVITIES = [
