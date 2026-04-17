@@ -34,12 +34,12 @@ class GeminiClient:
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(self.model_name)
                 self.is_configured = True
-                print(f"✅ Gemini configured with model: {self.model_name}")
+                print(f"[OK] Gemini configured with model: {self.model_name}")
             except Exception as e:
-                print(f"⚠️ Gemini setup failed: {e}")
+                print(f"[WARN] Gemini setup failed: {e}")
         else:
             reason = "no API key" if not self.api_key else "SDK not installed"
-            print(f"⚠️ Gemini not configured ({reason}) — using fallback processing")
+            print(f"[WARN] Gemini not configured ({reason}) -- using fallback processing")
 
     async def generate(self, prompt: str) -> Optional[str]:
         """Generate text from a prompt. Returns None if Gemini is unavailable."""
@@ -50,7 +50,7 @@ class GeminiClient:
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
-            print(f"❌ Gemini generation error: {e}")
+            print(f"[ERR] Gemini generation error: {e}")
             return None
 
     async def generate_json(self, prompt: str) -> Optional[dict]:
@@ -69,7 +69,7 @@ class GeminiClient:
                 cleaned = cleaned[4:].strip()
             return json.loads(cleaned)
         except (json.JSONDecodeError, Exception) as e:
-            print(f"⚠️ Failed to parse Gemini JSON: {e}")
+            print(f"[WARN] Failed to parse Gemini JSON: {e}")
             return None
 
     async def extract_needs_from_text(self, text: str) -> dict:
@@ -116,7 +116,7 @@ TEXT TO ANALYZE:
 
                 return json.loads(cleaned)
             except json.JSONDecodeError:
-                print(f"⚠️ Failed to parse Gemini response as JSON")
+                print(f"[WARN] Failed to parse Gemini response as JSON")
 
         # Fallback: basic keyword extraction
         return self._fallback_extract(text)
