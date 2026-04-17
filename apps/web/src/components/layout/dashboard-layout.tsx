@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
 import { useTranslation, LANGUAGES } from '../../lib/i18n';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, Menu, X, Bell,
+import { LogOut, Menu, X, Bell,
   MapPin, Briefcase, Target, Globe, Trophy, Package, Heart, IndianRupee,
   MessageSquare, Map, Bot, BarChart3, Shield, Mic, AlertTriangle, BookOpen,
   Handshake, Search, Building2, Gift, TrendingUp, Star, Network
 } from 'lucide-react';
 import NotificationBell from '../ui/NotificationBell';
+import { ChatbotWidget } from '../chat/chatbot-widget';
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; gradientClass: string }> = {
   platform_admin:  { label: 'Platform Admin',    color: '#818cf8', gradientClass: 'from-indigo-500 to-violet-500' },
@@ -256,6 +257,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
       </div>
+      <ChatbotWidget />
     </div>
   );
 }

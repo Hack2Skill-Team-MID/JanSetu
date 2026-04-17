@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '../../components/layout/dashboard-layout';
+import { ImpactMap } from '../../components/impact-map';
 import { useAuthStore } from '../../store/auth-store';
 import { api } from '../../lib/api';
 import { 
@@ -147,6 +148,11 @@ function NgoDashboard() {
           icon={<TrendingUp className="w-5 h-5 text-indigo-400" />} 
           trend="Volunteers to tasks"
         />
+      </div>
+
+      {/* Live Impact Map */}
+      <div className="w-full relative">
+         <ImpactMap />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -401,6 +407,11 @@ function DonorDashboard() {
           icon={<ClipboardList className="w-5 h-5 text-indigo-400" />} />
         <StatCard title="Lives Impacted" value={String(Math.round((donations?.totalDonated || 0) / 50))}
           icon={<Users className="w-5 h-5 text-emerald-400" />} trend="Estimated direct impact" />
+      </div>
+
+      {/* Live Impact Map */}
+      <div className="w-full relative">
+         <ImpactMap />
       </div>
 
       <div>

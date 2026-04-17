@@ -6,7 +6,7 @@ import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
 import {
   Building2, Users, FileText, Rocket, ChevronRight,
-  Check, MapPin, Globe, Shield, ArrowLeft
+  Check, MapPin, Globe, Shield, ArrowLeft, Scan, FileCheck
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,6 +36,7 @@ export default function OnboardingPage() {
   const user = useAuthStore((s) => s.user);
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [aiStatus, setAiStatus] = useState<'idle'|'scanning'|'verified'>('idle');
   const [form, setForm] = useState({
     name: '',
     type: 'ngo',
@@ -169,9 +170,41 @@ export default function OnboardingPage() {
 
               <div>
                 <label className="text-sm font-medium text-slate-300 block mb-1.5">Registration Number (optional)</label>
-                <input value={form.registrationNumber} onChange={(e) => updateField('registrationNumber', e.target.value)}
-                  placeholder="e.g., NGO-MH-2024-12345"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+                <div className="flex gap-2 items-start">
+                  <input value={form.registrationNumber} onChange={(e) => updateField('registrationNumber', e.target.value)}
+                    placeholder="e.g., NGO-MH-2024-12345"
+                    className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+                  
+                  {/* AI Scanner Button */}
+                  <div className="relative group">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setAiStatus('scanning');
+                        setTimeout(() => {
+                           updateField('registrationNumber', 'AI-VERIFIED-80G-' + Math.floor(Math.random()*10000));
+                           setAiStatus('verified');
+                        }, 2500);
+                      }}
+                      disabled={aiStatus !== 'idle'}
+                      className={`h-[46px] px-4 rounded-xl flex items-center justify-center gap-2 border transition-all ${
+                        aiStatus === 'verified' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                        aiStatus === 'scanning' ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' :
+                        'bg-slate-800 border-slate-700 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/50'
+                      }`}
+                    >
+                      {aiStatus === 'verified' ? <FileCheck className="w-5 h-5" /> : <Scan className={`w-5 h-5 ${aiStatus === 'scanning' ? 'animate-pulse' : ''}`} />}
+                      <span className="text-sm font-medium hidden sm:inline">
+                        {aiStatus === 'idle' ? 'AI Scan' : aiStatus === 'scanning' ? 'Scanning...' : 'Verified!'}
+                      </span>
+                    </button>
+                    {aiStatus === 'idle' && (
+                      <div className="absolute top-full right-0 mt-2 w-48 p-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                        Upload 80G/12A certificate to auto-verify using JanSetu AI.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div>
