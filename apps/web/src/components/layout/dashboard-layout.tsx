@@ -82,6 +82,7 @@ const ROLE_NAV: Record<string, { name: string; href: string; icon: any }[]> = {
   ],
   volunteer: [
     { name: 'My Portal', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'AI Task Match', href: '/dashboard/ai-match', icon: Target },
     { name: 'My Tasks', href: '/dashboard/tasks', icon: CheckSquare },
     { name: 'Campaigns', href: '/dashboard/campaigns', icon: Zap },
     { name: 'Report a Need', href: '/dashboard/report-need', icon: Mic },
