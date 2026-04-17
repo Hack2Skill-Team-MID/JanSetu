@@ -15,6 +15,8 @@ import {
   MapPin, Activity,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '../../lib/i18n';
+
 
 // KPI Card component
 function KPICard({ title, value, trend, icon: Icon, color }: {
@@ -203,6 +205,7 @@ function UrgentBanner({ emergency }: { emergency: any }) {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const [stats, setStats] = useState<any>(null);
   const [emergency, setEmergency] = useState<any>(null);
@@ -268,20 +271,20 @@ export default function DashboardPage() {
   const isDonor = role === 'donor';
 
   const kpis = isNGO ? [
-    { title: 'Total Needs', value: loadingStats ? '...' : (stats?.totalNeeds ?? 234), trend: { direction: 'up' as const, value: 12 }, icon: Zap, color: 'primary' as const },
-    { title: 'Active Volunteers', value: loadingStats ? '...' : (stats?.activeVolunteers ?? 89), trend: { direction: 'up' as const, value: 8 }, icon: Users, color: 'secondary' as const },
-    { title: 'Funds Raised', value: loadingStats ? '...' : (stats?.fundsRaised ? `₹${(stats.fundsRaised/100000).toFixed(1)}L` : '₹12.4L'), trend: { direction: 'up' as const, value: 15 }, icon: Heart, color: 'accent' as const },
-    { title: 'People Impacted', value: loadingStats ? '...' : (stats?.peopleImpacted ?? 8420), trend: { direction: 'up' as const, value: 22 }, icon: TrendingUp, color: 'primary' as const },
+    { title: t('dashboard.totalNeeds'), value: loadingStats ? '...' : (stats?.totalNeeds ?? 234), trend: { direction: 'up' as const, value: 12 }, icon: Zap, color: 'primary' as const },
+    { title: t('nav.volunteers'), value: loadingStats ? '...' : (stats?.activeVolunteers ?? 89), trend: { direction: 'up' as const, value: 8 }, icon: Users, color: 'secondary' as const },
+    { title: t('donate.totalRaised'), value: loadingStats ? '...' : (stats?.fundsRaised ? `₹${(stats.fundsRaised/100000).toFixed(1)}L` : '₹12.4L'), trend: { direction: 'up' as const, value: 15 }, icon: Heart, color: 'accent' as const },
+    { title: t('dashboard.livesImpacted'), value: loadingStats ? '...' : (stats?.peopleImpacted ?? 8420), trend: { direction: 'up' as const, value: 22 }, icon: TrendingUp, color: 'primary' as const },
   ] : isVolunteer ? [
-    { title: 'Tasks Completed', value: loadingStats ? '...' : (stats?.tasksCompleted ?? 12), icon: CheckCircle2, color: 'secondary' as const },
-    { title: 'Hours Logged', value: loadingStats ? '...' : (stats?.hoursLogged ?? 48), icon: Activity, color: 'primary' as const },
-    { title: 'Impact Score', value: loadingStats ? '...' : (stats?.impactScore ?? 740), icon: TrendingUp, color: 'accent' as const },
-    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Zap, color: 'primary' as const },
+    { title: t('dashboard.tasksCompleted'), value: loadingStats ? '...' : (stats?.tasksCompleted ?? 12), icon: CheckCircle2, color: 'secondary' as const },
+    { title: t('dashboard.hoursLogged'), value: loadingStats ? '...' : (stats?.hoursLogged ?? 48), icon: Activity, color: 'primary' as const },
+    { title: t('dashboard.impactScore'), value: loadingStats ? '...' : (stats?.impactScore ?? 740), icon: TrendingUp, color: 'accent' as const },
+    { title: t('nav.campaigns'), value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Zap, color: 'primary' as const },
   ] : [
-    { title: 'Total Donated', value: loadingStats ? '...' : (stats?.totalDonated ? `₹${Number(stats.totalDonated).toLocaleString()}` : '₹26,500'), icon: Heart, color: 'accent' as const },
-    { title: 'Campaigns Funded', value: loadingStats ? '...' : (stats?.campaignsFunded ?? 4), icon: Zap, color: 'primary' as const },
-    { title: 'Lives Impacted', value: loadingStats ? '...' : (stats?.livesImpacted ?? 530), icon: TrendingUp, color: 'secondary' as const },
-    { title: 'Active Campaigns', value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Activity, color: 'primary' as const },
+    { title: t('dashboard.totalDonated'), value: loadingStats ? '...' : (stats?.totalDonated ? `₹${Number(stats.totalDonated).toLocaleString()}` : '₹26,500'), icon: Heart, color: 'accent' as const },
+    { title: t('dashboard.campaignsFunded'), value: loadingStats ? '...' : (stats?.campaignsFunded ?? 4), icon: Zap, color: 'primary' as const },
+    { title: t('dashboard.livesImpacted'), value: loadingStats ? '...' : (stats?.livesImpacted ?? 530), icon: TrendingUp, color: 'secondary' as const },
+    { title: t('nav.campaigns'), value: loadingStats ? '...' : (stats?.activeCampaigns ?? 5), icon: Activity, color: 'primary' as const },
   ];
 
   const MOCK_ACTIVITIES = [
@@ -306,9 +309,9 @@ export default function DashboardPage() {
             {user?.name || 'Welcome'}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isNGO ? "Your ecosystem overview — campaigns, volunteers, and impact at a glance." :
-             isVolunteer ? "Your volunteer portal — tasks, campaigns, and your impact." :
-             "Your giving makes a real difference. Here's your impact overview."}
+            {isNGO ? t('dashboard.platformMetrics') :
+             isVolunteer ? t('dashboard.aiRecommended') :
+             t('dashboard.givingMatters')}
           </p>
         </div>
 

@@ -6,6 +6,8 @@ import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { useAuthStore } from '../../../store/auth-store';
 import { Heart, IndianRupee, TrendingUp, Gift, Target, Building2, Eye, EyeOff, Send, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
+
 
 const DEMO_CAMPAIGNS = [
   { _id: 'c1', title: 'Flood Relief — Assam 2025', description: 'Emergency relief for 5,000+ displaced families.', category: 'water', organizationId: { name: 'Assam Relief Foundation' }, goals: { fundingGoal: 2500000, fundingRaised: 1876000, peopleToHelp: 5000 } },
@@ -35,6 +37,7 @@ export default function DonatePortalPage() {
 
 function DonatePortalInner() {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const preselectedCampaign = searchParams.get('campaign');
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [myDonations, setMyDonations] = useState<any>(DEMO_MY_DONATIONS);
@@ -141,18 +144,18 @@ function DonatePortalInner() {
       <div className="space-y-8 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <Heart className="w-6 h-6 text-pink-400" /> Donor Portal
+            <Heart className="w-6 h-6 text-pink-400" /> {t('donate.title')}
           </h1>
-          <p className="text-slate-400 mt-1">Fund campaigns and track your impact</p>
+          <p className="text-slate-400 mt-1">{t('donate.subtitle')}</p>
         </div>
 
         {/* Impact Summary */}
         {myDonations && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { label: 'Total Donated', value: `₹${(myDonations.totalDonated || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-pink-400', bg: 'bg-pink-500/10' },
-              { label: 'Donations Made', value: myDonations.count || 0, icon: Gift, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-              { label: 'Impact Score', value: Math.min(Math.round((myDonations.totalDonated || 0) / 100), 999), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { label: t('donate.totalRaised'), value: `₹${(myDonations.totalDonated || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-pink-400', bg: 'bg-pink-500/10' },
+              { label: t('donate.donors'), value: myDonations.count || 0, icon: Gift, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+              { label: t('dashboard.impactScore'), value: Math.min(Math.round((myDonations.totalDonated || 0) / 100), 999), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
             ].map(item => (
               <div key={item.label} className="glass-card rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center gap-3 mb-2">

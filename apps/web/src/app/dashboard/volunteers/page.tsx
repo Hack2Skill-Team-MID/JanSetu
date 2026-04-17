@@ -14,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Users, Trophy, UsersRound, MapPin, Crown, Medal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
+
 
 interface Volunteer {
   id: string; name: string; email?: string; skills: string[];
@@ -222,6 +224,7 @@ function TeamFormation({ volunteers }: { volunteers: Volunteer[] }) {
 }
 
 export default function VolunteersPage() {
+  const { t } = useTranslation();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -257,18 +260,18 @@ export default function VolunteersPage() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">Volunteer Ecosystem</h1>
-            <p className="text-slate-400 mt-1">Manage volunteers, track performance, and build teams</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">{t('volunteers.title')}</h1>
+            <p className="text-slate-400 mt-1">{t('volunteers.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Users className="h-4 w-4" />
-            <span>{volunteers.length} volunteers registered</span>
+            <span>{volunteers.length} {t('volunteers.total').toLowerCase()}</span>
           </div>
         </div>
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <input
-            placeholder="Search by name or skill..."
+            placeholder={t('volunteers.search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-sm focus:border-indigo-500 focus:outline-none placeholder:text-slate-500"
@@ -277,13 +280,13 @@ export default function VolunteersPage() {
         <Tabs defaultValue="volunteers">
           <TabsList className="grid w-full max-w-md grid-cols-3 bg-slate-800 border border-slate-700">
             <TabsTrigger value="volunteers" className="gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-              <Users className="h-4 w-4" /><span className="hidden sm:inline">Volunteers</span>
+              <Users className="h-4 w-4" /><span className="hidden sm:inline">{t('volunteers.leaderboard').replace('Leaderboard','').trim() || t('nav.volunteers')}</span>
             </TabsTrigger>
             <TabsTrigger value="leaderboard" className="gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-              <Trophy className="h-4 w-4" /><span className="hidden sm:inline">Leaderboard</span>
+              <Trophy className="h-4 w-4" /><span className="hidden sm:inline">{t('volunteers.leaderboard')}</span>
             </TabsTrigger>
             <TabsTrigger value="teams" className="gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-              <UsersRound className="h-4 w-4" /><span className="hidden sm:inline">Teams</span>
+              <UsersRound className="h-4 w-4" /><span className="hidden sm:inline">{t('common.and')} Teams</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="volunteers" className="mt-6">

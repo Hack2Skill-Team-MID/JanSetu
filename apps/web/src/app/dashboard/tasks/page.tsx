@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, MapPin, Users, CalendarDays, Loader2, CheckCircle2, Clock, CircleDot, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
+
 
 type Priority = 'critical' | 'high' | 'medium' | 'low';
 type Status = 'open' | 'in_progress' | 'completed';
@@ -28,18 +30,14 @@ interface Task {
   priority?: Priority;
 }
 
-const STATUS_COLUMNS: { key: Status; label: string; icon: any; color: string; bg: string }[] = [
-  { key: 'open', label: 'To Do', icon: CircleDot, color: 'text-slate-400', bg: 'bg-slate-500/10' },
-  { key: 'in_progress', label: 'In Progress', icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-  { key: 'completed', label: 'Completed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-];
-
+// defined inside component so labels can use t()
 const PRIORITY_BADGE: Record<string, string> = {
   critical: 'bg-red-500/20 text-red-400 border-red-500/30',
   high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   medium: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   low: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 };
+
 
 const DEMO_TASKS: Task[] = [
   // Open
@@ -116,12 +114,19 @@ function TaskCard({ task, onMove }: { task: Task; onMove: (id: string, status: S
 }
 
 export default function TasksPage() {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', location: '', deadline: '', volunteersNeeded: 1 });
   const [submitting, setSubmitting] = useState(false);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+
+  const STATUS_COLUMNS = [
+    { key: 'open' as Status, label: t('tasks.open'), icon: CircleDot, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    { key: 'in_progress' as Status, label: t('tasks.inProgress'), icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { key: 'completed' as Status, label: t('tasks.completed'), icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  ];
 
   useEffect(() => {
     api.get('/tasks').then((res) => {
@@ -173,11 +178,11 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">Task Management</h1>
-            <p className="text-slate-400 mt-1">Manage and track all relief tasks across campaigns</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">{t('tasks.title')}</h1>
+            <p className="text-slate-400 mt-1">{t('tasks.subtitle')}</p>
           </div>
           <Button className="gap-2 w-fit bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.3)]" onClick={() => setShowNew(true)}>
-            <Plus className="h-4 w-4" /> New Task
+            <Plus className="h-4 w-4" /> {t('tasks.createTask')}
           </Button>
         </div>
 

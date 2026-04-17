@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { api } from '../../../lib/api';
 import { MapPin, AlertTriangle, Clock, Users, Plus, X } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
+
 
 const URGENCY_STYLES: Record<string, string> = {
   critical: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -80,6 +82,7 @@ const DEMO_NEEDS = [
 
 export default function NeedsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [needs, setNeeds] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -115,14 +118,14 @@ export default function NeedsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100">Community Needs</h1>
-            <p className="text-slate-400 mt-1">AI-prioritized needs from field surveys across India</p>
+            <h1 className="text-2xl font-bold text-slate-100">{t('needs.title')}</h1>
+            <p className="text-slate-400 mt-1">{t('needs.subtitle')}</p>
           </div>
           <button
             onClick={() => router.push('/dashboard/report-need')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all text-sm shadow-[0_0_15px_rgba(79,70,229,0.3)]"
           >
-            <Plus className="w-4 h-4" /> Report New Need
+            <Plus className="w-4 h-4" /> {t('needs.reportNew')}
           </button>
         </div>
 
@@ -153,7 +156,7 @@ export default function NeedsPage() {
                   : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-200'
               }`}
             >
-              {f === 'all' ? `All (${needs.length})` : f}
+              {f === 'all' ? `${t('needs.all')} (${needs.length})` : t(`needs.${f}`) || f}
             </button>
           ))}
         </div>
@@ -166,7 +169,7 @@ export default function NeedsPage() {
         ) : filtered.length === 0 ? (
           <div className="glass-card rounded-2xl p-16 text-center border border-slate-800">
             <MapPin className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-300">No needs found</h3>
+            <h3 className="text-lg font-medium text-slate-300">{t('needs.noNeeds')}</h3>
             <p className="text-slate-500 mt-2">Try a different filter or report a new community need.</p>
           </div>
         ) : (

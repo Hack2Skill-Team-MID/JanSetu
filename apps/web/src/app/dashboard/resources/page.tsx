@@ -5,6 +5,8 @@ import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { useAuthStore } from '../../../store/auth-store';
 import { Package, AlertTriangle, Plus, Truck, Clock, Share2, X, BarChart2, ArrowUpRight } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
+
 
 const CATEGORY_ICONS: Record<string, string> = {
   food: '🍚', medicine: '💊', clothing: '👕', shelter: '🏠',
@@ -37,6 +39,7 @@ const DEMO_ALERTS = {
 };
 
 export default function ResourcesPage() {
+  const { t } = useTranslation();
   const [resources, setResources] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,10 +115,10 @@ export default function ResourcesPage() {
               <Package className="w-6 h-6 text-green-400" />
               Resource Inventory
             </h1>
-            <p className="text-slate-400 mt-1">Track, allocate, and share resources across campaigns</p>
+            <p className="text-slate-400 mt-1">{t('resources.subtitle')}</p>
           </div>
           <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.25)]">
-            <Plus className="w-4 h-4" /> Add Resource
+            <Plus className="w-4 h-4" /> {t('resources.addResource')}
           </button>
         </div>
 
@@ -153,10 +156,10 @@ export default function ResourcesPage() {
         {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">
           {[
-            { key: 'all', label: `All (${resources.length})` },
-            { key: 'available', label: 'Available' },
-            { key: 'low_stock', label: 'Low Stock' },
-            { key: 'depleted', label: 'Depleted' },
+            { key: 'all', label: `${t('resources.all')} (${resources.length})` },
+            { key: 'available', label: t('resources.available') },
+            { key: 'low_stock', label: t('resources.low') },
+            { key: 'depleted', label: t('resources.critical') },
           ].map(f => (
             <button key={f.key} onClick={() => setFilterStatus(f.key)}
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${

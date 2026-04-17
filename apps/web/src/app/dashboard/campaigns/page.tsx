@@ -8,6 +8,8 @@ import {
   Target, Users, IndianRupee, TrendingUp, MapPin,
   Calendar, ChevronRight, Sparkles, Heart, Plus, Share2, Copy, Check
 } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
+
 
 const DEMO_CAMPAIGNS = [
   {
@@ -89,6 +91,7 @@ const DEMO_CAMPAIGNS = [
 
 export default function CampaignsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -187,13 +190,13 @@ export default function CampaignsPage() {
               <Target className="w-6 h-6 text-indigo-400" />
               Active Campaigns
             </h1>
-            <p className="text-slate-400 mt-1">Public campaigns across the NGO network</p>
+            <p className="text-slate-400 mt-1">{t('campaigns.title')} — {t('campaigns.all')}</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
             className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(79,70,229,0.3)]"
           >
-            <Plus className="w-4 h-4" /> Create Campaign
+            <Plus className="w-4 h-4" /> {t('campaigns.create')}
           </button>
         </div>
 

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
 import { Trophy, Medal, TrendingUp, Crown, Star } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
+
 
 interface Leader {
   _id: string; name: string; points: number; reputationScore: number; badges: string[]; rank: number;
@@ -29,6 +31,7 @@ const BADGE_META: Record<string, string> = {
 };
 
 export default function LeaderboardPage() {
+  const { t } = useTranslation();
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,8 +64,8 @@ export default function LeaderboardPage() {
           <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/20">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-100 mb-3">Volunteer Leaderboard</h1>
-          <p className="text-slate-400">Top contributors making a real-world impact. Earn points by completing tasks and reporting needs!</p>
+          <h1 className="text-3xl font-bold text-slate-100 mb-3">{t('leaderboard.title')}</h1>
+          <p className="text-slate-400">{t('leaderboard.subtitle')}</p>
         </div>
 
         {/* Podium */}
