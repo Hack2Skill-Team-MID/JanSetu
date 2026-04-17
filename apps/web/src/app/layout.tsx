@@ -29,7 +29,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#4f46e5" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className="font-sans bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30">
+      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
         <AuthProvider>
           <I18nProvider>
             <div className="min-h-screen flex flex-col">

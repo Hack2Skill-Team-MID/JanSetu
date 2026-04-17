@@ -1,358 +1,329 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '../../../lib/api';
-import DashboardLayout from '../../../components/layout/dashboard-layout';
-import { useAuthStore } from '../../../store/auth-store';
-import {
-  Users, Search, Filter, Shield, MapPin, Clock, CheckCircle2,
-  Star, Award, Briefcase, X, ChevronRight, Sparkles, UserCheck
-} from 'lucide-react';
+import DashboardLayout from '@/components/layout/dashboard-layout';
+import { api } from '@/lib/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Search, Users, Trophy, UsersRound, Star, MapPin, Crown, Medal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const SKILL_COLORS: Record<string, string> = {
-  Teaching: 'bg-blue-500/15 text-blue-400',
-  Medical: 'bg-red-500/15 text-red-400',
-  Engineering: 'bg-orange-500/15 text-orange-400',
-  Construction: 'bg-amber-500/15 text-amber-400',
-  Cooking: 'bg-emerald-500/15 text-emerald-400',
-  Driving: 'bg-indigo-500/15 text-indigo-400',
-  Translation: 'bg-purple-500/15 text-purple-400',
-  'First Aid': 'bg-pink-500/15 text-pink-400',
-  'IT Support': 'bg-cyan-500/15 text-cyan-400',
+interface Volunteer {
+  id: string;
+  name: string;
+  email?: string;
+  skills: string[];
+  location: string;
+  availability: string;
+  reputationScore: number;
+  points: number;
+  badges: string[];
+  tasksCompleted?: number;
+  impactScore?: number;
+}
+
+const AVAILABILITY_CONFIG: Record<string, { label: string; color: string }> = {
+  available: { label: 'Available', color: 'bg-secondary text-secondary-foreground' },
+  'full-time': { label: 'Full-time', color: 'bg-primary text-primary-foreground' },
+  'part-time': { label: 'Part-time', color: 'bg-muted text-muted-foreground' },
+  weekends: { label: 'Weekends', color: 'bg-muted text-muted-foreground' },
+  evenings: { label: 'Evenings', color: 'bg-muted text-muted-foreground' },
 };
 
-const AVAILABILITY_LABEL: Record<string, { label: string; color: string }> = {
-  'full-time': { label: 'Full-time', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  'part-time': { label: 'Part-time', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  weekends: { label: 'Weekends', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
-  evenings: { label: 'Evenings', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-};
-
-export default function VolunteersPage() {
-  const user = useAuthStore((s) => s.user);
-  const [volunteers, setVolunteers] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterAvail, setFilterAvail] = useState('all');
-  const [filterSkill, setFilterSkill] = useState('');
-  const [assignModal, setAssignModal] = useState<{ volunteer: any; open: boolean } | null>(null);
-  const [assigning, setAssigning] = useState(false);
-  const [assignedTask, setAssignedTask] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [volRes, taskRes] = await Promise.all([
-          api.get('/volunteers').catch(() => ({ data: { success: false } })),
-          api.get('/tasks?status=open').catch(() => ({ data: { success: false } })),
-        ]);
-        if (volRes.data.success) setVolunteers(volRes.data.data || []);
-        if (taskRes.data.success) setTasks(taskRes.data.data?.tasks || taskRes.data.data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const handleAssign = async () => {
-    if (!assignedTask || !assignModal) return;
-    setAssigning(true);
-    try {
-      await api.patch(`/tasks/${assignedTask}/assign`, {
-        volunteerId: assignModal.volunteer._id,
-      }).catch(() => null);
-      setSuccessMsg(`${assignModal.volunteer.userId?.name || 'Volunteer'} assigned successfully!`);
-      setAssignModal(null);
-      setAssignedTask('');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAssigning(false);
-    }
-  };
-
-  const filtered = volunteers.filter((v) => {
-    const name = v.userId?.name?.toLowerCase() || '';
-    const loc = v.location?.toLowerCase() || '';
-    const matchSearch = !search || name.includes(search.toLowerCase()) || loc.includes(search.toLowerCase());
-    const matchAvail = filterAvail === 'all' || v.availability === filterAvail;
-    const matchSkill = !filterSkill || v.skills?.includes(filterSkill);
-    return matchSearch && matchAvail && matchSkill;
-  });
-
-  const allSkills = Array.from(new Set(volunteers.flatMap((v) => v.skills || []))).slice(0, 15);
-  const isAdmin = ['ngo_coordinator', 'ngo_admin', 'admin', 'platform_admin'].includes(user?.role || '');
+function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
+  const avail = AVAILABILITY_CONFIG[volunteer.availability] || { label: volunteer.availability, color: 'bg-muted text-muted-foreground' };
+  const initials = volunteer.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-              <Users className="w-6 h-6 text-indigo-400" />
-              Volunteer Directory
-            </h1>
-            <p className="text-slate-400 mt-1">
-              {filtered.length} of {volunteers.length} volunteers • AI-matched to your campaigns
-            </p>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium">
-            <Sparkles className="w-4 h-4" />
-            AI Matching Active
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardContent className="pt-5 pb-4">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-12 w-12">
+            <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-semibold text-sm text-foreground truncate">{volunteer.name}</h3>
+              <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0', avail.color)}>
+                {avail.label}
+              </span>
+            </div>
+            {volunteer.location && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <MapPin className="h-3 w-3" />{volunteer.location}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Success banner */}
-        {successMsg && (
-          <div className="glass-card rounded-2xl border border-emerald-500/30 p-4 flex items-center gap-3 bg-emerald-500/5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <span className="text-sm text-emerald-400 font-medium">{successMsg}</span>
-          </div>
-        )}
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Volunteers', value: volunteers.length, icon: Users, color: 'indigo' },
-            { label: 'Full-time', value: volunteers.filter(v => v.availability === 'full-time').length, icon: Clock, color: 'emerald' },
-            { label: 'Avg Trust Score', value: volunteers.length > 0 ? Math.round(volunteers.reduce((s, v) => s + (v.impactScore || 50), 0) / volunteers.length) : 0, icon: Shield, color: 'purple' },
-            { label: 'Skills Offered', value: allSkills.length, icon: Star, color: 'amber' },
-          ].map((stat, i) => (
-            <div key={i} className="glass-card rounded-2xl border border-slate-800 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-400">{stat.label}</span>
-                <stat.icon className={`w-4 h-4 text-${stat.color}-400`} />
-              </div>
-              <div className="text-2xl font-bold text-slate-100">{stat.value}</div>
-            </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {(volunteer.skills || []).slice(0, 3).map((s) => (
+            <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="glass-card rounded-2xl border border-slate-800 p-4 flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or location..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-            />
+        <Separator className="my-3" />
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-sm font-bold text-foreground">{volunteer.points}</p>
+            <p className="text-[10px] text-muted-foreground">Points</p>
           </div>
-
-          {/* Availability */}
-          <select
-            value={filterAvail}
-            onChange={(e) => setFilterAvail(e.target.value)}
-            className="px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
-          >
-            <option value="all">All Availability</option>
-            <option value="full-time">Full-time</option>
-            <option value="part-time">Part-time</option>
-            <option value="weekends">Weekends</option>
-            <option value="evenings">Evenings</option>
-          </select>
-
-          {/* Skill filter */}
-          <select
-            value={filterSkill}
-            onChange={(e) => setFilterSkill(e.target.value)}
-            className="px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
-          >
-            <option value="">All Skills</option>
-            {allSkills.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <div>
+            <p className="text-sm font-bold text-foreground">{volunteer.reputationScore}</p>
+            <p className="text-[10px] text-muted-foreground">Reputation</p>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-foreground">{volunteer.badges?.length || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Badges</p>
+          </div>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-        {/* Volunteer Grid */}
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="glass-card rounded-2xl border border-slate-800 p-16 text-center">
-            <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-300">No volunteers found</h3>
-            <p className="text-slate-500 mt-2">Try adjusting your search filters.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filtered.map((vol) => {
-              const avail = AVAILABILITY_LABEL[vol.availability] || { label: vol.availability || 'N/A', color: 'bg-slate-700 text-slate-400 border-slate-600' };
-              return (
-                <div key={vol._id} className="glass-card rounded-2xl border border-slate-800 p-5 hover:border-indigo-500/30 transition-all group">
-                  {/* Header */}
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-lg font-bold text-white shrink-0">
-                      {vol.userId?.name?.[0]?.toUpperCase() || 'V'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-slate-100 group-hover:text-indigo-300 transition-colors">
-                        {vol.userId?.name || 'Volunteer'}
-                      </h3>
-                      <p className="text-xs text-slate-400">{vol.userId?.email}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-lg border ${avail.color}`}>
-                          {avail.label}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+function Leaderboard({ volunteers }: { volunteers: Volunteer[] }) {
+  const sorted = [...volunteers].sort((a, b) => b.points - a.points);
+  const top3 = sorted.slice(0, 3);
+  const rest = sorted.slice(3);
 
-                  {/* Location */}
-                  {vol.location && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
-                      <MapPin className="w-3 h-3" />
-                      {vol.location}
-                    </div>
-                  )}
+  const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
+  const podiumHeights = ['h-24', 'h-32', 'h-20'];
+  const podiumColors = ['bg-muted', 'bg-primary/20', 'bg-muted'];
+  const medals = [
+    <Medal key="silver" className="h-6 w-6 text-slate-400" />,
+    <Crown key="gold" className="h-7 w-7 text-amber-400" />,
+    <Medal key="bronze" className="h-6 w-6 text-amber-700" />,
+  ];
 
-                  {/* Bio */}
-                  {vol.bio && (
-                    <p className="text-xs text-slate-400 line-clamp-2 mb-3 italic">"{vol.bio}"</p>
-                  )}
-
-                  {/* Trust / Impact Score */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-slate-400 flex items-center gap-1"><Shield className="w-3 h-3" /> Impact Score</span>
-                      <span className="text-indigo-400 font-bold">{vol.impactScore || 0}/100</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-800 rounded-full">
-                      <div
-                        className="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-700"
-                        style={{ width: `${Math.min(vol.impactScore || 0, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Stats row */}
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                      <div className="text-sm font-bold text-slate-100">{vol.tasksCompleted || 0}</div>
-                      <div className="text-xs text-slate-500">Tasks</div>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                      <div className="text-sm font-bold text-slate-100">{vol.hoursLogged || 0}</div>
-                      <div className="text-xs text-slate-500">Hours</div>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-slate-800/50">
-                      <div className="text-sm font-bold text-slate-100">{vol.badges?.length || 0}</div>
-                      <div className="text-xs text-slate-500">Badges</div>
-                    </div>
-                  </div>
-
-                  {/* Skills */}
-                  {vol.skills?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {vol.skills.slice(0, 4).map((skill: string) => (
-                        <span key={skill} className={`px-2 py-0.5 text-xs rounded-md font-medium ${SKILL_COLORS[skill] || 'bg-slate-700 text-slate-300'}`}>
-                          {skill}
-                        </span>
-                      ))}
-                      {vol.skills.length > 4 && (
-                        <span className="px-2 py-0.5 text-xs rounded-md bg-slate-700 text-slate-400">
-                          +{vol.skills.length - 4} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Action button */}
-                  {isAdmin && (
-                    <button
-                      onClick={() => setAssignModal({ volunteer: vol, open: true })}
-                      className="w-full py-2.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 text-sm font-semibold hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2"
-                    >
-                      <UserCheck className="w-4 h-4" /> Assign to Task
-                    </button>
-                  )}
+  return (
+    <div className="space-y-8">
+      {/* Podium */}
+      {top3.length >= 2 && (
+        <div className="flex items-end justify-center gap-4 pt-4">
+          {podiumOrder.map((v, i) => {
+            if (!v) return null;
+            const initials = v.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+            return (
+              <div key={v.id} className="flex flex-col items-center gap-2">
+                {medals[i]}
+                <Avatar className="h-12 w-12 ring-2 ring-border">
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">{initials}</AvatarFallback>
+                </Avatar>
+                <p className="text-xs font-semibold text-foreground text-center max-w-[80px] leading-tight">{v.name}</p>
+                <div className={cn('w-20 rounded-t-lg flex items-center justify-center', podiumColors[i], podiumHeights[i])}>
+                  <span className="text-sm font-bold text-foreground">{i === 1 ? '1st' : i === 0 ? '2nd' : '3rd'}</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Assign Modal */}
-      {assignModal?.open && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setAssignModal(null)}>
-          <div className="glass-card rounded-2xl border border-slate-700 p-6 w-full max-w-md space-y-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-400" /> Assign to Task
-              </h2>
-              <button onClick={() => setAssignModal(null)} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Volunteer summary */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white">
-                {assignModal.volunteer.userId?.name?.[0]?.toUpperCase()}
               </div>
-              <div>
-                <div className="text-sm font-semibold text-slate-200">{assignModal.volunteer.userId?.name}</div>
-                <div className="text-xs text-slate-400">{assignModal.volunteer.skills?.slice(0, 3).join(', ')}</div>
-              </div>
-            </div>
-
-            {/* Task selector */}
-            <div>
-              <label className="text-sm text-slate-300 font-medium block mb-2">Select an Open Task</label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {tasks.length === 0 ? (
-                  <p className="text-sm text-slate-400 text-center py-4">No open tasks available</p>
-                ) : (
-                  tasks.map((task) => (
-                    <button
-                      key={task._id}
-                      onClick={() => setAssignedTask(task._id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${
-                        assignedTask === task._id
-                          ? 'border-indigo-500/50 bg-indigo-500/10'
-                          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-slate-200">{task.title}</div>
-                      <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-                        <MapPin className="w-3 h-3" /> {task.location}
-                        <span className="ml-auto">{task.volunteersNeeded} needed</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setAssignModal(null)} className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium transition-colors">
-                Cancel
-              </button>
-              <button
-                onClick={handleAssign}
-                disabled={!assignedTask || assigning}
-                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
-              >
-                {assigning ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <><UserCheck className="w-4 h-4" /> Assign</>
-                )}
-              </button>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
+
+      {/* Rankings list */}
+      <div className="space-y-2">
+        {rest.map((v, i) => {
+          const initials = v.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+          const rank = i + 4;
+          const maxPoints = sorted[0]?.points || 1;
+          return (
+            <Card key={v.id}>
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-muted-foreground w-6 text-center">#{rank}</span>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-muted text-xs font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{v.name}</p>
+                    <Progress value={(v.points / maxPoints) * 100} className="h-1.5 mt-1" />
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-foreground">{v.points}</p>
+                    <p className="text-[10px] text-muted-foreground">pts</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TeamFormation({ volunteers }: { volunteers: Volunteer[] }) {
+  const available = volunteers.filter((v) => ['available', 'full-time'].includes(v.availability));
+  const skillGroups: Record<string, Volunteer[]> = {};
+  available.forEach((v) => {
+    (v.skills || []).slice(0, 2).forEach((skill) => {
+      if (!skillGroups[skill]) skillGroups[skill] = [];
+      skillGroups[skill].push(v);
+    });
+  });
+
+  const topSkills = Object.entries(skillGroups)
+    .filter(([, vols]) => vols.length >= 1)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 6);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Available volunteers grouped by skill for team formation</p>
+      {topSkills.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <UsersRound className="h-10 w-10 mx-auto mb-3 opacity-40" />
+          <p>No available volunteers to form teams</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {topSkills.map(([skill, vols]) => (
+            <Card key={skill}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span>{skill}</span>
+                  <Badge variant="secondary">{vols.length} volunteers</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {vols.slice(0, 4).map((v) => {
+                  const initials = v.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+                  return (
+                    <div key={v.id} className="flex items-center gap-2">
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="text-[10px] bg-muted">{initials}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium text-foreground truncate">{v.name}</span>
+                    </div>
+                  );
+                })}
+                {vols.length > 4 && <p className="text-xs text-muted-foreground">+{vols.length - 4} more</p>}
+                <Button size="sm" variant="outline" className="w-full mt-2 text-xs h-7">Form Team</Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function VolunteersPage() {
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    api.get('/volunteers').then((res) => {
+      if (res.data.success) {
+        const vols = res.data.data?.volunteers || res.data.data || [];
+        // Normalize volunteer profile data
+        const normalized = vols.map((v: any) => ({
+          id: v.id || v._id,
+          name: v.user?.name || v.name || 'Unknown',
+          email: v.user?.email || v.email,
+          skills: v.skills || [],
+          location: v.location || v.user?.location || '',
+          availability: v.availability || 'weekends',
+          reputationScore: v.user?.reputationScore || v.reputationScore || 50,
+          points: v.user?.points || v.points || 0,
+          badges: v.user?.badges || v.badges || [],
+          tasksCompleted: v.tasksCompleted || 0,
+          impactScore: v.impactScore || 0,
+        }));
+        setVolunteers(normalized);
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const filtered = volunteers.filter((v) =>
+    !search ||
+    v.name.toLowerCase().includes(search.toLowerCase()) ||
+    (v.skills || []).some((s) => s.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Volunteer Ecosystem</h1>
+            <p className="text-muted-foreground mt-1">Manage volunteers, track performance, and build teams</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span>{volunteers.length} total volunteers</span>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search by name or skill..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="volunteers">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="volunteers" className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Volunteers</span>
+            </TabsTrigger>
+            <TabsTrigger value="leaderboard" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              <span className="hidden sm:inline">Leaderboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="teams" className="gap-2">
+              <UsersRound className="h-4 w-4" />
+              <span className="hidden sm:inline">Teams</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="volunteers" className="mt-6">
+            {loading ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {Array(8).fill(0).map((_, i) => <Skeleton key={i} className="h-52" />)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Users className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p>No volunteers found</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filtered.map((v) => <VolunteerCard key={v.id} volunteer={v} />)}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="leaderboard" className="mt-6 max-w-2xl">
+            {loading ? (
+              <div className="space-y-3">{Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
+            ) : (
+              <Leaderboard volunteers={volunteers} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="teams" className="mt-6">
+            {loading ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-48" />)}
+              </div>
+            ) : (
+              <TeamFormation volunteers={volunteers} />
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 }
