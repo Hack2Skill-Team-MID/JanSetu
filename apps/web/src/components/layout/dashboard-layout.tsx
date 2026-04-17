@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
@@ -17,6 +17,7 @@ import {
 import { SidebarProvider, useSidebar } from './sidebar-context';
 import { ChatbotWidget } from '../chat/chatbot-widget';
 import NotificationBell from '../ui/NotificationBell';
+import { globalSearch, type SearchResult } from '@/lib/search';
 import {
   LayoutDashboard, Map, Zap, CheckSquare, Users, Network, Heart,
   BookOpen, BarChart3, MessageSquare, Settings, Menu, Search, Bell,
@@ -191,7 +192,27 @@ function AppNavbar() {
   const router = useRouter();
   const role = String(user?.role || 'community');
   const roleConf = ROLE_CONFIG[role] || ROLE_CONFIG.community;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [activeEmergency, setActiveEmergency] = useState<any>(null);
+
+  const runSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const results = await globalSearch(q);
+      setSearchResults(results);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => runSearch(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery, runSearch]);
 
   useEffect(() => {
     const checkEmergency = async () => {
@@ -233,13 +254,73 @@ function AppNavbar() {
 
         {/* Emergency banner */}
         {activeEmergency && (
-          <Link href="/dashboard/emergency" className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse flex-shrink-0">
+          <Link href="/dashboard/emergency" className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse flex-shrink-0">
             <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-            <span className="text-xs font-bold text-destructive">🚨 ACTIVE EMERGENCY</span>
+            <span className="text-xs font-bold text-destructive">🚨 EMERGENCY</span>
           </Link>
         )}
 
-        <div className="flex-1" />
+        {/* Center: Live Search */}
+        <div className="flex-1 flex justify-center px-4">
+          <div className="w-full max-w-md relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search campaigns, needs, NGOs..."
+              className="pl-10 pr-8 bg-muted border-0 focus-visible:ring-1"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(''); setSearchResults([]); setSearchOpen(false); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            {searchOpen && searchQuery.length >= 2 && (
+              <div className="absolute top-12 left-0 right-0 bg-popover border border-border rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="p-2 border-b border-border">
+                  <span className="text-xs text-muted-foreground">
+                    {searchLoading ? 'Searching...' : searchResults.length > 0 ? `${searchResults.length} results for "${searchQuery}"` : `No results for "${searchQuery}"`}
+                  </span>
+                </div>
+                {searchResults.length > 0 ? (
+                  <div className="py-1">
+                    {searchResults.map((item) => (
+                      <Link key={`${item.type}-${item.id}`} href={item.href}
+                        onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                        className="flex items-start gap-3 px-3 py-2.5 hover:bg-muted transition-colors">
+                        <div className={cn('mt-0.5 p-1.5 rounded-md text-white text-xs flex-shrink-0',
+                          item.type === 'campaign' ? 'bg-primary' :
+                          item.type === 'need' ? 'bg-destructive' :
+                          item.type === 'ngo' ? 'bg-secondary' : 'bg-accent'
+                        )}>
+                          {item.type === 'campaign' ? '⚡' : item.type === 'need' ? '🆘' : item.type === 'ngo' ? '🏢' : '👤'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground truncate">{item.title}</p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{item.description}</p>
+                          {item.location && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="h-3 w-3" />{item.location}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-[10px] capitalize flex-shrink-0">{item.type}</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                ) : !searchLoading && (
+                  <div className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground">No matching results</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try different keywords</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
