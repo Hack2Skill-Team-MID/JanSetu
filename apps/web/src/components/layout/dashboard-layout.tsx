@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
 import { useTranslation, LANGUAGES } from '../../lib/i18n';
-import { LogOut, Menu, X, Bell,
+import { LayoutDashboard, Users, FileText, Settings, LogOut, Menu, X, Bell,
   MapPin, Briefcase, Target, Globe, Trophy, Package, Heart, IndianRupee,
   MessageSquare, Map, Bot, BarChart3, Shield, Mic, AlertTriangle, BookOpen,
   Handshake, Search, Building2, Gift, TrendingUp, Star, Network
@@ -194,7 +194,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   `}
                 >
                   <item.icon className={`mr-3 w-4 h-4 flex-shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  {item.name}
+                  {t(`nav.${item.name.replace(/ /g, '')}`, item.name)}
                 </Link>
               );
             })}
