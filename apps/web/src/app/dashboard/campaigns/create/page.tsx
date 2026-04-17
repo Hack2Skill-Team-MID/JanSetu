@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '../../../lib/api';
-import DashboardLayout from '../../../components/layout/dashboard-layout';
+import { api } from '@/lib/api';
+import DashboardLayout from '@/components/layout/dashboard-layout';
 import {
   Target, MapPin, Calendar, Users, IndianRupee,
   Plus, Sparkles, X, ChevronRight, Check

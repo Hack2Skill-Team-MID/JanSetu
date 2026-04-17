@@ -3,94 +3,87 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
-import { Trophy, Star, Award, Shield, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, TrendingUp, Crown, Star } from 'lucide-react';
+import { useTranslation } from '../../../lib/i18n';
 
-const BADGE_META: Record<string, { icon: string; color: string }> = {
-  first_task: { icon: '🎯', color: 'bg-blue-500/15 text-blue-400' },
-  five_tasks: { icon: '⭐', color: 'bg-amber-500/15 text-amber-400' },
-  ten_tasks: { icon: '🏆', color: 'bg-yellow-500/15 text-yellow-400' },
-  first_aid_hero: { icon: '🏥', color: 'bg-emerald-500/15 text-emerald-400' },
-  crisis_responder: { icon: '🚨', color: 'bg-red-500/15 text-red-400' },
-  team_player: { icon: '🤝', color: 'bg-indigo-500/15 text-indigo-400' },
-  mentor: { icon: '📚', color: 'bg-purple-500/15 text-purple-400' },
-  top_donor: { icon: '💎', color: 'bg-cyan-500/15 text-cyan-400' },
-  weekly_star: { icon: '🌟', color: 'bg-amber-500/15 text-amber-400' },
-  verified_ngo: { icon: '✅', color: 'bg-emerald-500/15 text-emerald-400' },
-  admin: { icon: '🛡️', color: 'bg-slate-500/15 text-slate-400' },
+
+interface Leader {
+  _id: string; name: string; points: number; reputationScore: number; badges: string[]; rank: number;
+}
+
+const DEMO_LEADERS: Leader[] = [
+  { _id: 'l1', name: 'Priya Sharma', points: 4820, reputationScore: 96, badges: ['first_task', 'ten_tasks', 'first_aid_hero', 'crisis_responder'], rank: 1 },
+  { _id: 'l2', name: 'Meera Iyer', points: 4510, reputationScore: 93, badges: ['first_task', 'ten_tasks', 'first_aid_hero', 'weekly_star'], rank: 2 },
+  { _id: 'l3', name: 'Rahul Verma', points: 4120, reputationScore: 91, badges: ['first_task', 'ten_tasks', 'team_player'], rank: 3 },
+  { _id: 'l4', name: 'Deepika Reddy', points: 3720, reputationScore: 88, badges: ['first_task', 'five_tasks', 'team_player'], rank: 4 },
+  { _id: 'l5', name: 'Arjun Mehta', points: 3640, reputationScore: 89, badges: ['first_task', 'five_tasks', 'community_voice'], rank: 5 },
+  { _id: 'l6', name: 'Anita Patel', points: 3310, reputationScore: 87, badges: ['first_task', 'five_tasks', 'community_voice'], rank: 6 },
+  { _id: 'l7', name: 'Kavya Nair', points: 2980, reputationScore: 84, badges: ['first_task', 'five_tasks', 'mentor'], rank: 7 },
+  { _id: 'l8', name: 'Sunita Devi', points: 2880, reputationScore: 82, badges: ['first_task', 'five_tasks', 'mentor'], rank: 8 },
+  { _id: 'l9', name: 'Vikram Tiwari', points: 2340, reputationScore: 76, badges: ['first_task', 'five_tasks'], rank: 9 },
+  { _id: 'l10', name: 'Ravi Kumar', points: 1990, reputationScore: 74, badges: ['first_task'], rank: 10 },
+];
+
+const BADGE_META: Record<string, string> = {
+  first_task: '🎯', five_tasks: '⭐', ten_tasks: '🏆', first_aid_hero: '🏥',
+  crisis_responder: '🚨', team_player: '🤝', mentor: '📚',
+  top_donor: '💎', community_voice: '📢', weekly_star: '🌟',
 };
 
 export default function LeaderboardPage() {
-  const [leaders, setLeaders] = useState<any[]>([]);
+  const { t } = useTranslation();
+  const [leaders, setLeaders] = useState<Leader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await api.get('/gamification/leaderboard');
-        if (res.data.success) setLeaders(res.data.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+    api.get('/gamification/leaderboard').then((res) => {
+      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        setLeaders(res.data.data);
+      } else {
+        setLeaders(DEMO_LEADERS);
       }
-    };
-    fetch();
+    }).catch(() => setLeaders(DEMO_LEADERS)).finally(() => setIsLoading(false));
   }, []);
 
-  const getRankStyle = (rank: number) => {
-    if (rank === 1) return 'bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border-amber-500/30';
-    if (rank === 2) return 'bg-gradient-to-r from-slate-400/10 to-slate-500/5 border-slate-400/30';
-    if (rank === 3) return 'bg-gradient-to-r from-orange-500/10 to-amber-500/5 border-orange-500/20';
-    return 'border-slate-800';
-  };
+  const top3 = leaders.slice(0, 3);
+  const rest = leaders.slice(3);
 
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `#${rank}`;
-  };
+  const PODIUM_CONFIG = [
+    { rank: '2nd', color: 'border-slate-300 text-slate-300', barH: 'h-28', barBg: 'bg-gradient-to-t from-slate-600/50 to-slate-400/10', pts: 'text-slate-300' },
+    { rank: '1st', color: 'border-amber-400 text-amber-100', barH: 'h-40', barBg: 'bg-gradient-to-t from-amber-900/50 to-amber-500/10', pts: 'text-amber-400' },
+    { rank: '3rd', color: 'border-amber-700 text-amber-500', barH: 'h-20', barBg: 'bg-gradient-to-t from-amber-900/30 to-amber-700/10', pts: 'text-amber-700' },
+  ];
+  const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
+  const medalIcons = ['🥈', '🥇', '🥉'];
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <Trophy className="w-6 h-6 text-amber-400" />
-            Volunteer Leaderboard
-          </h1>
-          <p className="text-slate-400 mt-1">Top contributors across the JanSetu network</p>
+      <div className="space-y-8 animate-fade-in">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto py-6">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-500/20">
+            <Trophy className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-100 mb-3">{t('leaderboard.title')}</h1>
+          <p className="text-slate-400">{t('leaderboard.subtitle')}</p>
         </div>
 
-        {/* Top 3 podium */}
-        {!isLoading && leaders.length >= 3 && (
-          <div className="grid grid-cols-3 gap-4">
-            {[leaders[1], leaders[0], leaders[2]].map((l, idx) => {
-              const isFirst = idx === 1;
+        {/* Podium */}
+        {!isLoading && top3.length >= 3 && (
+          <div className="flex flex-col md:flex-row items-end justify-center gap-4 mb-4">
+            {podiumOrder.map((leader, i) => {
+              if (!leader) return null;
+              const cfg = PODIUM_CONFIG[i];
               return (
-                <div key={l._id} className={`glass-card rounded-2xl border p-6 text-center ${isFirst ? 'border-amber-500/30 -mt-2 scale-105' : 'border-slate-800 mt-4'} transition-transform`}>
-                  <div className={`text-3xl mb-3 ${isFirst ? 'text-4xl' : ''}`}>
-                    {getRankIcon(l.rank)}
+                <div key={leader._id} className={`flex flex-col items-center flex-1 max-w-[160px] ${i === 1 ? 'z-10' : 'opacity-90'}`}>
+                  <span className="text-3xl mb-2">{medalIcons[i]}</span>
+                  <div className={`w-14 h-14 rounded-full border-2 ${cfg.color} bg-slate-800 flex items-center justify-center text-lg font-bold mb-2 relative`}>
+                    {leader.name.charAt(0)}
                   </div>
-                  <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-lg font-bold ${
-                    isFirst ? 'bg-gradient-to-br from-amber-500 to-yellow-600 text-white' : 'bg-slate-700 text-slate-200'
-                  }`}>
-                    {l.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-100 mt-3">{l.name}</h3>
-                  <div className={`text-2xl font-bold mt-2 ${isFirst ? 'text-amber-400' : 'text-indigo-400'}`}>
-                    {l.points} pts
-                  </div>
-                  <div className="flex items-center justify-center gap-1 mt-2">
-                    <Star className="w-3 h-3 text-slate-500" />
-                    <span className="text-xs text-slate-400">Rep: {l.reputationScore}/100</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-3 justify-center">
-                    {l.badges?.slice(0, 3).map((b: string) => (
-                      <span key={b} className={`px-2 py-0.5 text-xs rounded-md ${BADGE_META[b]?.color || 'bg-slate-700 text-slate-300'}`}>
-                        {BADGE_META[b]?.icon || '🏅'} {b.replace(/_/g, ' ')}
-                      </span>
-                    ))}
+                  <p className="font-bold text-slate-200 text-sm text-center mb-1">{leader.name}</p>
+                  <p className={`font-semibold text-sm mb-3 ${cfg.pts}`}>{leader.points.toLocaleString()} pts</p>
+                  <div className={`w-full ${cfg.barH} ${cfg.barBg} rounded-t-2xl border border-white/5 border-b-0 flex items-center justify-center`}>
+                    <span className="text-sm font-bold text-slate-400">{cfg.rank}</span>
                   </div>
                 </div>
               );
@@ -98,55 +91,64 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Full rankings */}
-        <div className="glass-card rounded-2xl border border-slate-800">
-          <div className="p-6 border-b border-slate-800">
-            <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-              <Award className="w-5 h-5 text-indigo-400" /> Full Rankings
-            </h2>
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        {/* Full Rankings List */}
+        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
+          <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/60">
+            <h2 className="text-base font-bold text-slate-200">Global Ranking</h2>
+            <div className="text-sm font-medium text-slate-400 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Updated live
             </div>
+          </div>
+          {isLoading ? (
+            <div className="p-12 text-center text-indigo-400">Loading rankings...</div>
           ) : (
             <div className="divide-y divide-slate-800/50">
-              {leaders.map((l) => (
-                <div key={l._id} className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-800/30 transition-colors border-l-2 ${getRankStyle(l.rank)}`}>
-                  <div className="w-10 text-center text-lg font-bold text-slate-300">
-                    {getRankIcon(l.rank)}
+              {rest.map((leader, i) => (
+                <div key={leader._id} className="p-4 flex items-center gap-4 hover:bg-slate-800/30 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-bold text-slate-400">
+                    {i + 4}
                   </div>
-
-                  <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-200">
-                    {l.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  <div className="w-10 h-10 rounded-full bg-indigo-900/50 border border-indigo-800/50 flex items-center justify-center font-bold text-indigo-300 text-sm">
+                    {leader.name.charAt(0)}
                   </div>
-
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-slate-100">{l.name}</h3>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {l.badges?.map((b: string) => (
-                        <span key={b} className="text-xs">{BADGE_META[b]?.icon || '🏅'}</span>
+                    <p className="font-semibold text-slate-200 text-sm">{leader.name}</p>
+                    <div className="flex gap-1 mt-0.5">
+                      {leader.badges?.slice(0, 4).map((b, idx) => (
+                        <span key={idx} className="text-sm">{BADGE_META[b] || '🏅'}</span>
                       ))}
                     </div>
                   </div>
-
                   <div className="text-right">
-                    <div className="text-lg font-bold text-indigo-400">{l.points}</div>
-                    <div className="text-xs text-slate-500">points</div>
-                  </div>
-
-                  <div className="text-right w-20">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Shield className="w-3 h-3 text-slate-500" />
-                      <span className="text-sm font-semibold text-slate-300">{l.reputationScore}</span>
-                    </div>
-                    <div className="text-xs text-slate-500">reputation</div>
+                    <p className="font-bold text-indigo-400 text-sm">{leader.points.toLocaleString()} pts</p>
+                    <p className="text-xs text-slate-500">Rep: {leader.reputationScore}</p>
                   </div>
                 </div>
               ))}
+              {leaders.length <= 3 && (
+                <div className="p-12 text-center text-slate-500">No more leaders to display.</div>
+              )}
             </div>
           )}
+        </div>
+
+        {/* How to Earn Points */}
+        <div className="glass-card rounded-2xl border border-slate-800 p-6">
+          <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2"><Star className="w-4 h-4 text-amber-400" /> How to Earn Points</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { action: 'Complete a task', pts: '+100 pts', icon: '✅' },
+              { action: 'Report a need', pts: '+25 pts', icon: '📍' },
+              { action: 'Donate to campaign', pts: '+50 pts', icon: '❤️' },
+              { action: 'Refer a volunteer', pts: '+75 pts', icon: '👥' },
+            ].map(item => (
+              <div key={item.action} className="bg-slate-800/50 rounded-xl p-3 text-center border border-slate-700/50">
+                <div className="text-2xl mb-1">{item.icon}</div>
+                <div className="text-xs font-bold text-indigo-400">{item.pts}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{item.action}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </DashboardLayout>

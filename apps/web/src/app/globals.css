@@ -1,100 +1,333 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-@theme {
-  --font-sans: var(--font-inter);
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   LIGHT MODE FALLBACK tokens
+   ============================================================ */
+:root {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.52 0.18 145);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.12 0.01 150);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.72 0.22 145);
+  --accent-foreground: oklch(0.05 0 0);
+  --destructive: oklch(0.60 0.22 22);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.92 0.01 145);
+  --input: oklch(0.96 0.005 145);
+  --ring: oklch(0.52 0.18 145);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.52 0.18 145);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.94 0.02 145);
+  --sidebar-accent-foreground: oklch(0.12 0.01 150);
+  --sidebar-border: oklch(0.90 0.01 145);
+  --sidebar-ring: oklch(0.52 0.18 145);
+  /* Chart color palette */
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
 }
 
+/* ============================================================
+   DARK THEME DEFAULTS  (.dark class on <html>)
+   ============================================================ */
+.dark {
+  --background: oklch(0.09 0.005 150);
+  --foreground: oklch(0.97 0.005 150);
+  --card: oklch(0.13 0.008 150);
+  --card-foreground: oklch(0.97 0.005 150);
+  --popover: oklch(0.11 0.008 150);
+  --popover-foreground: oklch(0.97 0.005 150);
+  --primary: oklch(0.62 0.20 152);
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.20 0.04 152);
+  --secondary-foreground: oklch(0.90 0.01 152);
+  --muted: oklch(0.18 0.008 150);
+  --muted-foreground: oklch(0.60 0.01 150);
+  --accent: oklch(0.72 0.22 148);
+  --accent-foreground: oklch(0.05 0 0);
+  --destructive: oklch(0.60 0.22 22);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.22 0.015 150);
+  --input: oklch(0.16 0.010 150);
+  --ring: oklch(0.62 0.20 152);
+  --sidebar: oklch(0.07 0.006 150);
+  --sidebar-foreground: oklch(0.92 0.008 150);
+  --sidebar-primary: oklch(0.62 0.20 152);
+  --sidebar-primary-foreground: oklch(0.05 0 0);
+  --sidebar-accent: oklch(0.16 0.012 150);
+  --sidebar-accent-foreground: oklch(0.90 0.005 150);
+  --sidebar-border: oklch(0.18 0.012 150);
+  --sidebar-ring: oklch(0.55 0.17 152);
+  /* Chart color palette */
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
+}
+
+/* ============================================================
+   TAILWIND TOKEN BRIDGE
+   ============================================================ */
+@theme inline {
+  --font-sans: 'Inter', 'Geist', system-ui, sans-serif;
+  --color-background:             var(--background);
+  --color-foreground:             var(--foreground);
+  --color-card:                   var(--card);
+  --color-card-foreground:        var(--card-foreground);
+  --color-popover:                var(--popover);
+  --color-popover-foreground:     var(--popover-foreground);
+  --color-primary:                var(--primary);
+  --color-primary-foreground:     var(--primary-foreground);
+  --color-secondary:              var(--secondary);
+  --color-secondary-foreground:   var(--secondary-foreground);
+  --color-muted:                  var(--muted);
+  --color-muted-foreground:       var(--muted-foreground);
+  --color-accent:                 var(--accent);
+  --color-accent-foreground:      var(--accent-foreground);
+  --color-destructive:            var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:                 var(--border);
+  --color-input:                  var(--input);
+  --color-ring:                   var(--ring);
+  --radius-sm:  calc(var(--radius) - 4px);
+  --radius-md:  calc(var(--radius) - 2px);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) + 4px);
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
 @layer base {
-  :root {
-    --background: #020617; /* slate-950 */
-    --foreground: #f8fafc; /* slate-50 */
-    
-    --primary: #4f46e5; /* indigo-600 */
-    --primary-foreground: #ffffff;
-    
-    --secondary: #1e293b; /* slate-800 */
-    --secondary-foreground: #f8fafc;
-    
-    --accent: #c084fc; /* purple-400 */
-    --accent-foreground: #ffffff;
-    
-    --muted: #0f172a; /* slate-900 */
-    --muted-foreground: #94a3b8; /* slate-400 */
-    
-    --card: #0f172a; /* slate-900 */
-    --card-foreground: #f8fafc;
-    
-    --border: #1e293b; /* slate-800 */
-    
-    --destructive: #ef4444; /* red-500 */
-    --destructive-foreground: #f8fafc;
-    
-    --success: #10b981; /* emerald-500 */
-    --success-foreground: #ffffff;
-    
-    --warning: #f59e0b; /* amber-500 */
-    --warning-foreground: #ffffff;
-  }
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
 }
 
-@layer base {
-  * {
-    border-color: var(--border);
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-}
-
-/* Custom Utilities for glassmorphism */
+/* ============================================================
+   UTILITIES
+   ============================================================ */
 @layer utilities {
-  .glass {
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  .text-pretty { text-wrap: pretty; }
+
+  .animate-fade-in {
+    animation: fadeIn 0.35s ease-out both;
   }
-  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Glass Card (dark default) ── */
   .glass-card {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    background: oklch(0.13 0.008 150 / 0.90);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid oklch(0.28 0.018 150 / 0.55);
   }
-  
-  .text-gradient {
-    background: linear-gradient(to right, #818cf8, #c084fc);
+
+  /* ── Gradient text ── */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* ── Card hover ── */
+  .card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px color-mix(in oklch, var(--primary) 12%, transparent);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 22px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--background); }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--primary) 40%, transparent);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--primary) 65%, transparent);
+  }
 }
 
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ============================================================
+   ☀️  LIGHT THEME OVERRIDES
+   These fire when the JS theme system sets data-theme on <html>.
+   Two strategies combined:
+   1) Override Tailwind's --color-slate-* CSS vars (inherited by all)
+   2) Direct class overrides for glass-card, inputs, etc.
+   ============================================================ */
+
+/* ── AURORA (White + Teal) ─────────────────────────────────── */
+html[data-theme="aurora"] {
+  color-scheme: light;
+
+  /* Remap Tailwind's slate scale: dark surfaces → light, light text → dark */
+  --color-slate-50:  oklch(0.985 0.003 200);
+  --color-slate-100: oklch(0.14 0.025 215);   /* was near-white → now dark text */
+  --color-slate-200: oklch(0.22 0.020 215);
+  --color-slate-300: oklch(0.32 0.015 212);
+  --color-slate-400: oklch(0.44 0.012 210);
+  --color-slate-500: oklch(0.50 0.010 208);   /* muted readable text */
+  --color-slate-600: oklch(0.52 0.008 205);
+  --color-slate-700: oklch(0.82 0.012 200);   /* was dark border → light subtle border */
+  --color-slate-800: oklch(0.92 0.008 198);   /* was dark surface → very light surface */
+  --color-slate-900: oklch(0.96 0.005 196);   /* was near-black → near-white surface */
+  --color-slate-950: oklch(0.98 0.003 195);
+
+  /* Indigo scale used in some cards */
+  --color-indigo-500: oklch(0.50 0.18 262);
+  --color-indigo-400: oklch(0.55 0.18 262);
+  --color-indigo-300: oklch(0.60 0.16 262);
 }
 
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+/* glass-card gets white surface in light themes */
+html[data-theme="aurora"] .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: oklch(0.82 0.015 200 / 0.70) !important;
+  box-shadow: 0 2px 24px rgba(0, 168, 168, 0.07), 0 1px 4px rgba(0,0,0,0.04) !important;
 }
 
-/* Scrollbar customization */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Inputs / text areas that use bg-slate-800 */
+html[data-theme="aurora"] input,
+html[data-theme="aurora"] textarea,
+html[data-theme="aurora"] select {
+  background-color: oklch(0.96 0.006 198) !important;
+  border-color: oklch(0.82 0.015 200) !important;
+  color: oklch(0.14 0.025 215) !important;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--background);
+/* Hardcoded dark card wrappers in page components */
+html[data-theme="aurora"] [class*="bg-slate-800"],
+html[data-theme="aurora"] [class*="bg-slate-900"] {
+  background-color: oklch(0.94 0.008 198) !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--secondary);
-  border-radius: 4px;
+/* Hardcoded dark borders */
+html[data-theme="aurora"] [class*="border-slate-800"],
+html[data-theme="aurora"] [class*="border-slate-700"],
+html[data-theme="aurora"] [class*="border-slate-600"] {
+  border-color: oklch(0.82 0.015 200) !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+/* Hardcoded light text (was meant for dark bg) */
+html[data-theme="aurora"] [class*="text-slate-100"],
+html[data-theme="aurora"] [class*="text-slate-200"],
+html[data-theme="aurora"] [class*="text-slate-300"] {
+  color: oklch(0.18 0.025 215) !important;
+}
+
+html[data-theme="aurora"] [class*="text-slate-400"],
+html[data-theme="aurora"] [class*="text-slate-500"] {
+  color: oklch(0.46 0.012 210) !important;
+}
+
+/* Pill/badge backgrounds that look dark on white */
+html[data-theme="aurora"] [class*="bg-slate-800/"] {
+  background-color: oklch(0.91 0.010 198 / 0.7) !important;
+}
+html[data-theme="aurora"] [class*="bg-slate-900/"] {
+  background-color: oklch(0.95 0.006 200 / 0.8) !important;
+}
+
+/* Hover states on dark-bg elements */
+html[data-theme="aurora"] [class*="hover:bg-slate-800"],
+html[data-theme="aurora"] [class*="hover:bg-slate-700"] {
+  --tw-bg-opacity: 1;
+}
+
+/* ── SUNRISE (White + Coral/Orange) ────────────────────────── */
+html[data-theme="sunrise"] {
+  color-scheme: light;
+
+  --color-slate-50:  oklch(0.985 0.004 55);
+  --color-slate-100: oklch(0.14 0.020 45);    /* near-black warm text */
+  --color-slate-200: oklch(0.22 0.016 45);
+  --color-slate-300: oklch(0.32 0.012 48);
+  --color-slate-400: oklch(0.44 0.010 50);
+  --color-slate-500: oklch(0.50 0.008 52);    /* muted readable text */
+  --color-slate-600: oklch(0.52 0.007 52);
+  --color-slate-700: oklch(0.83 0.014 50);    /* warm light border */
+  --color-slate-800: oklch(0.92 0.010 52);    /* warm light surface */
+  --color-slate-900: oklch(0.96 0.007 55);    /* near-white warm surface */
+  --color-slate-950: oklch(0.98 0.004 55);
+
+  --color-indigo-500: oklch(0.58 0.22 40);
+  --color-indigo-400: oklch(0.62 0.20 38);
+}
+
+html[data-theme="sunrise"] .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: oklch(0.83 0.018 50 / 0.70) !important;
+  box-shadow: 0 2px 24px rgba(251, 130, 50, 0.06), 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+html[data-theme="sunrise"] input,
+html[data-theme="sunrise"] textarea,
+html[data-theme="sunrise"] select {
+  background-color: oklch(0.96 0.008 52) !important;
+  border-color: oklch(0.83 0.018 50) !important;
+  color: oklch(0.14 0.020 45) !important;
+}
+
+html[data-theme="sunrise"] [class*="bg-slate-800"],
+html[data-theme="sunrise"] [class*="bg-slate-900"] {
+  background-color: oklch(0.94 0.010 52) !important;
+}
+
+html[data-theme="sunrise"] [class*="border-slate-800"],
+html[data-theme="sunrise"] [class*="border-slate-700"],
+html[data-theme="sunrise"] [class*="border-slate-600"] {
+  border-color: oklch(0.83 0.018 50) !important;
+}
+
+html[data-theme="sunrise"] [class*="text-slate-100"],
+html[data-theme="sunrise"] [class*="text-slate-200"],
+html[data-theme="sunrise"] [class*="text-slate-300"] {
+  color: oklch(0.18 0.020 45) !important;
+}
+
+html[data-theme="sunrise"] [class*="text-slate-400"],
+html[data-theme="sunrise"] [class*="text-slate-500"] {
+  color: oklch(0.46 0.010 50) !important;
+}
+
+html[data-theme="sunrise"] [class*="bg-slate-800/"] {
+  background-color: oklch(0.92 0.012 52 / 0.7) !important;
+}
+html[data-theme="sunrise"] [class*="bg-slate-900/"] {
+  background-color: oklch(0.95 0.008 55 / 0.8) !important;
 }

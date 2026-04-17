@@ -6,7 +6,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'volunteer' | 'ngo_coordinator' | 'admin';
+  role: 'volunteer' | 'ngo_coordinator' | 'admin' | 'donor' | 'community' | 'platform_admin' | string;
   avatar?: string;
 }
 
