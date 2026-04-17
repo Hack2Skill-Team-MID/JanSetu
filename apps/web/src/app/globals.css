@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   LIGHT MODE FALLBACK (overridden by theme vars at runtime)
+   LIGHT MODE FALLBACK tokens
    ============================================================ */
 :root {
   --background: oklch(0.985 0 0);
@@ -38,8 +38,7 @@
 }
 
 /* ============================================================
-   DARK THEME DEFAULTS — picked up when .dark is on <html>  
-   (Forest / Midnight palettes apply their own vars at runtime)
+   DARK THEME DEFAULTS  (.dark class on <html>)
    ============================================================ */
 .dark {
   --background: oklch(0.09 0.005 150);
@@ -72,89 +71,45 @@
 }
 
 /* ============================================================
-   LIGHT THEME SLATE SCALE REMAPPING
-   Pages use hardcoded slate-* classes. In light themes we 
-   remap the Tailwind slate scale so dark surfaces → light and
-   light text → dark, maintaining correct contrast.
-   ============================================================ */
-
-/* AURORA — White + Teal */
-[data-theme="aurora"] {
-  /* Flip slate so dark bg classes become light surfaces */
-  --color-slate-950: #0f172a;   /* stays dark for true-black needs */
-  --color-slate-900: #f0f9ff;   /* was darkest bg → very light teal-tinted */
-  --color-slate-800: #e0f2fe;   /* dark surface → pale sky */
-  --color-slate-700: #bae6fd;   /* dark border → light border sky */
-  --color-slate-600: #475569;   /* mid → readable grey */
-  --color-slate-500: #334155;   /* muted → darker grey for contrast */
-  --color-slate-400: #1e3a5f;   /* muted text → deep slate-blue */
-  --color-slate-300: #0f2744;   /* light text → dark for contrast on white */
-  --color-slate-200: #0c1d35;
-  --color-slate-100: #0a1628;   /* was near-white text → becomes dark text */
-
-  /* glass-card override */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(14, 116, 144, 0.20);
-}
-
-/* SUNRISE — White + Coral/Orange */
-[data-theme="sunrise"] {
-  /* Flip slate so dark bg classes become light warm surfaces */
-  --color-slate-950: #1c1917;   /* stays dark */
-  --color-slate-900: #fffbf5;   /* was darkest → warm near-white */
-  --color-slate-800: #fef3e2;   /* dark surface → warm cream */
-  --color-slate-700: #fed7aa;   /* dark border → peach border */
-  --color-slate-600: #92400e;   /* mid → warm brown-grey */
-  --color-slate-500: #78350f;   /* muted text */
-  --color-slate-400: #44200a;   /* muted text → dark warm */
-  --color-slate-300: #2c1306;
-  --color-slate-200: #1a0c04;
-  --color-slate-100: #150a03;   /* was near-white → becomes deep warm black */
-
-  --glass-bg: rgba(255, 255, 255, 0.88);
-  --glass-border: rgba(234, 88, 12, 0.18);
-}
-
-/* ============================================================
    TAILWIND TOKEN BRIDGE
    ============================================================ */
 @theme inline {
   --font-sans: 'Inter', 'Geist', system-ui, sans-serif;
-  --color-background:              var(--background);
-  --color-foreground:              var(--foreground);
-  --color-card:                    var(--card);
-  --color-card-foreground:         var(--card-foreground);
-  --color-popover:                 var(--popover);
-  --color-popover-foreground:      var(--popover-foreground);
-  --color-primary:                 var(--primary);
-  --color-primary-foreground:      var(--primary-foreground);
-  --color-secondary:               var(--secondary);
-  --color-secondary-foreground:    var(--secondary-foreground);
-  --color-muted:                   var(--muted);
-  --color-muted-foreground:        var(--muted-foreground);
-  --color-accent:                  var(--accent);
-  --color-accent-foreground:       var(--accent-foreground);
-  --color-destructive:             var(--destructive);
-  --color-destructive-foreground:  var(--destructive-foreground);
-  --color-border:                  var(--border);
-  --color-input:                   var(--input);
-  --color-ring:                    var(--ring);
+  --color-background:             var(--background);
+  --color-foreground:             var(--foreground);
+  --color-card:                   var(--card);
+  --color-card-foreground:        var(--card-foreground);
+  --color-popover:                var(--popover);
+  --color-popover-foreground:     var(--popover-foreground);
+  --color-primary:                var(--primary);
+  --color-primary-foreground:     var(--primary-foreground);
+  --color-secondary:              var(--secondary);
+  --color-secondary-foreground:   var(--secondary-foreground);
+  --color-muted:                  var(--muted);
+  --color-muted-foreground:       var(--muted-foreground);
+  --color-accent:                 var(--accent);
+  --color-accent-foreground:      var(--accent-foreground);
+  --color-destructive:            var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:                 var(--border);
+  --color-input:                  var(--input);
+  --color-ring:                   var(--ring);
   --radius-sm:  calc(var(--radius) - 4px);
   --radius-md:  calc(var(--radius) - 2px);
   --radius-lg:  var(--radius);
   --radius-xl:  calc(var(--radius) + 4px);
-  --color-sidebar:                      var(--sidebar);
-  --color-sidebar-foreground:           var(--sidebar-foreground);
-  --color-sidebar-primary:              var(--sidebar-primary);
-  --color-sidebar-primary-foreground:   var(--sidebar-primary-foreground);
-  --color-sidebar-accent:               var(--sidebar-accent);
-  --color-sidebar-accent-foreground:    var(--sidebar-accent-foreground);
-  --color-sidebar-border:               var(--sidebar-border);
-  --color-sidebar-ring:                 var(--sidebar-ring);
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
 }
 
 /* ============================================================
-   BASE LAYER
+   BASE
    ============================================================ */
 @layer base {
   * { @apply border-border outline-ring/50; }
@@ -167,7 +122,6 @@
 @layer utilities {
   .text-pretty { text-wrap: pretty; }
 
-  /* Page entrance animation */
   .animate-fade-in {
     animation: fadeIn 0.35s ease-out both;
   }
@@ -176,16 +130,15 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Glass Card ── adapts to dark/light theme ── */
+  /* ── Glass Card (dark default) ── */
   .glass-card {
-    background: var(--glass-bg, oklch(0.13 0.008 150 / 0.90));
+    background: oklch(0.13 0.008 150 / 0.90);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid var(--glass-border, oklch(0.28 0.018 150 / 0.55));
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid oklch(0.28 0.018 150 / 0.55);
   }
 
-  /* ── Gradient Text ── Foreground → Primary ── */
+  /* ── Gradient text ── */
   .gradient-text {
     background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
     -webkit-background-clip: text;
@@ -193,12 +146,7 @@
     background-clip: text;
   }
 
-  /* ── Glow utilities ── */
-  .glow-primary {
-    box-shadow: 0 0 22px color-mix(in oklch, var(--primary) 35%, transparent);
-  }
-
-  /* ── Card hover float ── */
+  /* ── Card hover ── */
   .card-hover {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
@@ -207,7 +155,11 @@
     box-shadow: 0 14px 40px color-mix(in oklch, var(--primary) 12%, transparent);
   }
 
-  /* ── Scrollbar ── uses primary color ── */
+  .glow-primary {
+    box-shadow: 0 0 22px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--background); }
   ::-webkit-scrollbar-thumb {
@@ -217,4 +169,153 @@
   ::-webkit-scrollbar-thumb:hover {
     background: color-mix(in oklch, var(--primary) 65%, transparent);
   }
+}
+
+/* ============================================================
+   ☀️  LIGHT THEME OVERRIDES
+   These fire when the JS theme system sets data-theme on <html>.
+   Two strategies combined:
+   1) Override Tailwind's --color-slate-* CSS vars (inherited by all)
+   2) Direct class overrides for glass-card, inputs, etc.
+   ============================================================ */
+
+/* ── AURORA (White + Teal) ─────────────────────────────────── */
+html[data-theme="aurora"] {
+  color-scheme: light;
+
+  /* Remap Tailwind's slate scale: dark surfaces → light, light text → dark */
+  --color-slate-50:  oklch(0.985 0.003 200);
+  --color-slate-100: oklch(0.14 0.025 215);   /* was near-white → now dark text */
+  --color-slate-200: oklch(0.22 0.020 215);
+  --color-slate-300: oklch(0.32 0.015 212);
+  --color-slate-400: oklch(0.44 0.012 210);
+  --color-slate-500: oklch(0.50 0.010 208);   /* muted readable text */
+  --color-slate-600: oklch(0.52 0.008 205);
+  --color-slate-700: oklch(0.82 0.012 200);   /* was dark border → light subtle border */
+  --color-slate-800: oklch(0.92 0.008 198);   /* was dark surface → very light surface */
+  --color-slate-900: oklch(0.96 0.005 196);   /* was near-black → near-white surface */
+  --color-slate-950: oklch(0.98 0.003 195);
+
+  /* Indigo scale used in some cards */
+  --color-indigo-500: oklch(0.50 0.18 262);
+  --color-indigo-400: oklch(0.55 0.18 262);
+  --color-indigo-300: oklch(0.60 0.16 262);
+}
+
+/* glass-card gets white surface in light themes */
+html[data-theme="aurora"] .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: oklch(0.82 0.015 200 / 0.70) !important;
+  box-shadow: 0 2px 24px rgba(0, 168, 168, 0.07), 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* Inputs / text areas that use bg-slate-800 */
+html[data-theme="aurora"] input,
+html[data-theme="aurora"] textarea,
+html[data-theme="aurora"] select {
+  background-color: oklch(0.96 0.006 198) !important;
+  border-color: oklch(0.82 0.015 200) !important;
+  color: oklch(0.14 0.025 215) !important;
+}
+
+/* Hardcoded dark card wrappers in page components */
+html[data-theme="aurora"] [class*="bg-slate-800"],
+html[data-theme="aurora"] [class*="bg-slate-900"] {
+  background-color: oklch(0.94 0.008 198) !important;
+}
+
+/* Hardcoded dark borders */
+html[data-theme="aurora"] [class*="border-slate-800"],
+html[data-theme="aurora"] [class*="border-slate-700"],
+html[data-theme="aurora"] [class*="border-slate-600"] {
+  border-color: oklch(0.82 0.015 200) !important;
+}
+
+/* Hardcoded light text (was meant for dark bg) */
+html[data-theme="aurora"] [class*="text-slate-100"],
+html[data-theme="aurora"] [class*="text-slate-200"],
+html[data-theme="aurora"] [class*="text-slate-300"] {
+  color: oklch(0.18 0.025 215) !important;
+}
+
+html[data-theme="aurora"] [class*="text-slate-400"],
+html[data-theme="aurora"] [class*="text-slate-500"] {
+  color: oklch(0.46 0.012 210) !important;
+}
+
+/* Pill/badge backgrounds that look dark on white */
+html[data-theme="aurora"] [class*="bg-slate-800/"] {
+  background-color: oklch(0.91 0.010 198 / 0.7) !important;
+}
+html[data-theme="aurora"] [class*="bg-slate-900/"] {
+  background-color: oklch(0.95 0.006 200 / 0.8) !important;
+}
+
+/* Hover states on dark-bg elements */
+html[data-theme="aurora"] [class*="hover:bg-slate-800"],
+html[data-theme="aurora"] [class*="hover:bg-slate-700"] {
+  --tw-bg-opacity: 1;
+}
+
+/* ── SUNRISE (White + Coral/Orange) ────────────────────────── */
+html[data-theme="sunrise"] {
+  color-scheme: light;
+
+  --color-slate-50:  oklch(0.985 0.004 55);
+  --color-slate-100: oklch(0.14 0.020 45);    /* near-black warm text */
+  --color-slate-200: oklch(0.22 0.016 45);
+  --color-slate-300: oklch(0.32 0.012 48);
+  --color-slate-400: oklch(0.44 0.010 50);
+  --color-slate-500: oklch(0.50 0.008 52);    /* muted readable text */
+  --color-slate-600: oklch(0.52 0.007 52);
+  --color-slate-700: oklch(0.83 0.014 50);    /* warm light border */
+  --color-slate-800: oklch(0.92 0.010 52);    /* warm light surface */
+  --color-slate-900: oklch(0.96 0.007 55);    /* near-white warm surface */
+  --color-slate-950: oklch(0.98 0.004 55);
+
+  --color-indigo-500: oklch(0.58 0.22 40);
+  --color-indigo-400: oklch(0.62 0.20 38);
+}
+
+html[data-theme="sunrise"] .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: oklch(0.83 0.018 50 / 0.70) !important;
+  box-shadow: 0 2px 24px rgba(251, 130, 50, 0.06), 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+html[data-theme="sunrise"] input,
+html[data-theme="sunrise"] textarea,
+html[data-theme="sunrise"] select {
+  background-color: oklch(0.96 0.008 52) !important;
+  border-color: oklch(0.83 0.018 50) !important;
+  color: oklch(0.14 0.020 45) !important;
+}
+
+html[data-theme="sunrise"] [class*="bg-slate-800"],
+html[data-theme="sunrise"] [class*="bg-slate-900"] {
+  background-color: oklch(0.94 0.010 52) !important;
+}
+
+html[data-theme="sunrise"] [class*="border-slate-800"],
+html[data-theme="sunrise"] [class*="border-slate-700"],
+html[data-theme="sunrise"] [class*="border-slate-600"] {
+  border-color: oklch(0.83 0.018 50) !important;
+}
+
+html[data-theme="sunrise"] [class*="text-slate-100"],
+html[data-theme="sunrise"] [class*="text-slate-200"],
+html[data-theme="sunrise"] [class*="text-slate-300"] {
+  color: oklch(0.18 0.020 45) !important;
+}
+
+html[data-theme="sunrise"] [class*="text-slate-400"],
+html[data-theme="sunrise"] [class*="text-slate-500"] {
+  color: oklch(0.46 0.010 50) !important;
+}
+
+html[data-theme="sunrise"] [class*="bg-slate-800/"] {
+  background-color: oklch(0.92 0.012 52 / 0.7) !important;
+}
+html[data-theme="sunrise"] [class*="bg-slate-900/"] {
+  background-color: oklch(0.95 0.008 55 / 0.8) !important;
 }
