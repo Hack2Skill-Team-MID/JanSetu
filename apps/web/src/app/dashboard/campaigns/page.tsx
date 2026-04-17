@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../../../lib/i18n';
 
+const REGIONS = [
+  'Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata',
+  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+];
 
 const DEMO_CAMPAIGNS = [
   {
@@ -355,12 +359,14 @@ export default function CampaignsPage() {
                   className="px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
-              <input
+              <select
                 value={createForm.location}
                 onChange={e => setCreateForm(p => ({ ...p, location: e.target.value }))}
-                placeholder="Location (e.g. Mumbai, Maharashtra) *"
                 className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
-              />
+              >
+                <option value="">Select a location *</option>
+                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
               <div className="flex gap-3">
                 <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium transition-colors">Cancel</button>
                 <button

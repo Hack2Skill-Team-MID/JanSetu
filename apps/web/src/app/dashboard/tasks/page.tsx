@@ -38,6 +38,10 @@ const PRIORITY_BADGE: Record<string, string> = {
   low: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 };
 
+const REGIONS = [
+  'Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata',
+  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+];
 
 const DEMO_TASKS: Task[] = [
   // Open
@@ -294,9 +298,14 @@ export default function TasksPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-300">Location</label>
-                <Input placeholder="Delhi, India" value={newTask.location}
+                <select
+                  value={newTask.location}
                   onChange={(e) => setNewTask((p) => ({ ...p, location: e.target.value }))}
-                  className="bg-slate-800 border-slate-700 text-slate-200" />
+                  className="w-full h-10 px-3 py-2 bg-slate-800 border-slate-700 rounded-md text-sm text-slate-200 focus:outline-none focus:border-indigo-500 border"
+                >
+                  <option value="">Select a location</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-300">Volunteers Needed</label>

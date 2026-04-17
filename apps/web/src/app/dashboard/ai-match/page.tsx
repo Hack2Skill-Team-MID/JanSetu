@@ -11,6 +11,11 @@ const SKILLS = [
   'Fundraising', 'Social Media', 'Translation', 'Cooking', 'Driving'
 ];
 
+const REGIONS = [
+  'Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata',
+  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+];
+
 export default function AIMatchPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [location, setLocation] = useState('');
@@ -113,12 +118,14 @@ export default function AIMatchPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-semibold text-slate-300 mb-2 block">Your Location</label>
-              <input
+              <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Mumbai, Maharashtra"
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-              />
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
+              >
+                <option value="">Select a location</option>
+                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
             </div>
             <div>
               <label className="text-sm font-semibold text-slate-300 mb-2 block">Availability</label>

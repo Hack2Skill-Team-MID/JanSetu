@@ -9,6 +9,11 @@ import {
   CheckCircle2, FileText
 } from 'lucide-react';
 
+const REGIONS = [
+  'Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata',
+  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+];
+
 export default function ReportNeedPage() {
   const user = useAuthStore((s) => s.user);
   const [mode, setMode] = useState<'form' | 'voice'>('form');
@@ -264,9 +269,12 @@ export default function ReportNeedPage() {
                 <label className="text-sm font-medium text-slate-300 flex items-center gap-1 mb-1.5">
                   <MapPin className="w-4 h-4" /> Location
                 </label>
-                <input value={form.location} onChange={(e) => updateField('location', e.target.value)}
-                  placeholder="e.g., Dharavi, Mumbai"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none" />
+                <select value={form.location} onChange={(e) => updateField('location', e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">Select a location</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
             </div>
 

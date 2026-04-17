@@ -11,6 +11,11 @@ import {
 } from 'lucide-react';
 
 /* ─── Constants ─────────────────────────────────────────────── */
+const REGIONS = [
+  'Delhi NCR', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata',
+  'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+];
+
 const DISASTER_TYPES = [
   { value: 'flood',      label: 'Flood',       icon: Droplets,       color: 'text-blue-400' },
   { value: 'earthquake', label: 'Earthquake',  icon: Zap,            color: 'text-amber-400' },
@@ -314,12 +319,14 @@ export default function EmergencyPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-300 block mb-1">Affected Area *</label>
-                <input
+                <select
                   value={form.affectedAreaName}
                   onChange={(e) => setForm({ ...form, affectedAreaName: e.target.value })}
-                  placeholder="e.g. Mumbai Western Suburbs"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-red-500 focus:outline-none placeholder:text-slate-500"
-                />
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:border-red-500 focus:outline-none"
+                >
+                  <option value="">Select an affected area *</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
             </div>
 
