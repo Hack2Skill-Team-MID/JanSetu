@@ -35,6 +35,12 @@
   --sidebar-accent-foreground: oklch(0.12 0.01 150);
   --sidebar-border: oklch(0.90 0.01 145);
   --sidebar-ring: oklch(0.52 0.18 145);
+  /* Chart color palette */
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
 }
 
 /* ============================================================
@@ -68,6 +74,12 @@
   --sidebar-accent-foreground: oklch(0.90 0.005 150);
   --sidebar-border: oklch(0.18 0.012 150);
   --sidebar-ring: oklch(0.55 0.17 152);
+  /* Chart color palette */
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
 }
 
 /* ============================================================
