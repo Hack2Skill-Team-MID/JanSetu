@@ -33,7 +33,7 @@ const FundDonut = dynamic(
                 fontSize: 12,
                 color: '#e2e8f0',
               }}
-              formatter={(val: number) => [`₹${val.toLocaleString()}`, 'Allocated']}
+              formatter={(val: any) => `₹${Number(val).toLocaleString()}`}
             />
             <Legend
               iconType="circle"
