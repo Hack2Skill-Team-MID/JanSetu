@@ -69,6 +69,7 @@ function DonatePortalInner() {
   const [isAnonymous, setIsAnonymous]       = useState(false);
   const [donating, setDonating]             = useState(false);
   const [success, setSuccess]               = useState(false);
+  const [donateError, setDonateError]       = useState<string | null>(null);
   const [isLoading, setIsLoading]           = useState(true);
   const [showPayPanel, setShowPayPanel]     = useState(false);
   const [search, setSearch]                 = useState('');
@@ -112,15 +113,23 @@ function DonatePortalInner() {
   const handleDonate = async () => {
     if (!amount || !selectedCampaign) return;
     setDonating(true);
+    setDonateError(null);
     try {
+      // Safely extract organizationId — it may be an object from demo data
+      const campaign = campaigns.find(c => c._id === selectedCampaign);
+      const rawOrgId = campaign?.organizationId;
+      const organizationId = typeof rawOrgId === 'string' ? rawOrgId
+        : (rawOrgId?._id || rawOrgId?.id || undefined);
+
       const res = await api.post('/donations/initiate', {
         amount: parseInt(amount),
-        campaignId: selectedCampaign,
+        campaignId: typeof selectedCampaign === 'string' && !selectedCampaign.startsWith('c') ? selectedCampaign : undefined,
+        organizationId,
         message,
         isAnonymous,
         type: 'one_time',
       });
-      if (!res.data.success) throw new Error('Failed');
+      if (!res.data.success) throw new Error(res.data.error || 'Failed');
       const { donationId, razorpayOrderId, razorpayKeyId, demoMode } = res.data.data;
       if (demoMode || razorpayKeyId === 'rzp_test_demo') {
         await api.post('/donations/verify', { donationId, razorpayOrderId });
@@ -136,8 +145,8 @@ function DonatePortalInner() {
             {
               id: `d-${Date.now()}`,
               amount: parseInt(amount),
-              campaign: { title: campaigns.find(c => c._id === selectedCampaign)?.title || 'Campaign' },
-              organization: { name: 'JanSetu Network' },
+              campaign: { title: campaign?.title || 'Campaign' },
+              organization: { name: typeof rawOrgId === 'object' ? rawOrgId?.name : 'JanSetu Network' },
               type: 'one_time',
               paymentStatus: 'completed',
               message,
@@ -168,8 +177,9 @@ function DonatePortalInner() {
           theme: { color: '#6366f1' },
         }).open();
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setDonateError(e?.response?.data?.error || e?.message || 'Donation failed. Please try again.');
     } finally {
       setDonating(false);
     }
@@ -452,6 +462,13 @@ function DonatePortalInner() {
                 <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isAnonymous ? 'right-0.5' : 'left-0.5'}`} />
               </span>
             </button>
+
+            {/* Error */}
+            {donateError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                ⚠️ {donateError}
+              </div>
+            )}
 
             {/* Submit */}
             <button

@@ -19,6 +19,7 @@ router.post(
         return;
       }
 
+      // Use organizationId if exists, otherwise fall back to user.id so demo users without an org don’t crash
       const orgId = req.user!.organizationId || req.user!.id;
 
       const existing = await prisma.emergencyEvent.findFirst({
@@ -83,6 +84,32 @@ router.post(
           autoActionNeedsCreated: need ? 1 : 0,
         },
       });
+
+      // Auto-action 3: Send in-app notifications to all active volunteers
+      try {
+        const volunteers = await prisma.volunteerProfile.findMany({
+          where: { isActive: true },
+          select: { userId: true },
+          take: 200, // cap to avoid mega queries
+        });
+
+        const notifData = volunteers.map((v: any) => ({
+          userId: v.userId,
+          type: 'emergency_alert',
+          title: `🚨 Emergency: ${title}`,
+          body: `A ${declarationType} emergency has been declared in ${affectedArea.name}. Severity: ${(severity || 'level_1').replace('_', ' ')}. Please check the Emergency dashboard.`,
+          data: JSON.stringify({ emergencyId: emergency.id, severity, affectedArea: affectedArea.name }),
+          isRead: false,
+          createdAt: new Date(),
+        }));
+
+        if (notifData.length > 0) {
+          await prisma.notification.createMany({ data: notifData, skipDuplicates: true });
+          console.log(`🔔 Sent emergency notifications to ${notifData.length} volunteers`);
+        }
+      } catch (notifErr: any) {
+        console.warn('⚠️ Volunteer notifications failed (non-critical):', notifErr.message);
+      }
 
       res.status(201).json({
         success: true,

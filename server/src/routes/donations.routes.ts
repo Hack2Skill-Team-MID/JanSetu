@@ -40,6 +40,12 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
       return res.status(400).json({ success: false, error: 'Amount must be at least ₹1' });
     }
 
+    // Validate that FK ids look like real UUIDs before passing to Prisma
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const safeCampaignId    = campaignId    && UUID_RE.test(campaignId)    ? campaignId    : undefined;
+    const safeOrgId         = organizationId && UUID_RE.test(organizationId) ? organizationId : undefined;
+    const safeNeedId        = needId        && UUID_RE.test(needId)        ? needId        : undefined;
+
     let razorpayOrderId: string;
 
     if (isRazorpayConfigured()) {
@@ -49,7 +55,7 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
         currency: 'INR',
         receipt: `rcpt_${crypto.randomBytes(8).toString('hex')}`,
         notes: {
-          campaignId: campaignId || '',
+          campaignId: safeCampaignId || '',
           donorId: user.id,
           donorEmail: user.email,
         },
@@ -63,9 +69,9 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
     const donation = await prisma.donation.create({
       data: {
         donorId: user.id,
-        organizationId,
-        campaignId,
-        needId,
+        organizationId: safeOrgId,
+        campaignId: safeCampaignId,
+        needId: safeNeedId,
         amount,
         type: type || 'one_time',
         razorpayOrderId,
@@ -91,7 +97,7 @@ router.post('/initiate', authMiddleware, async (req: Request, res: Response) => 
     try {
       await createAuditEntry({
         action: 'donation', entity: 'donation', entityId: donation.id,
-        description: `Donation initiated: ₹${amount}${campaignId ? ' for campaign' : ''}`,
+        description: `Donation initiated: ₹${amount}${safeCampaignId ? ' for campaign' : ''}`,
         after: { amount, type: type || 'one_time', isAnonymous },
         req: req as AuthRequest,
       });
