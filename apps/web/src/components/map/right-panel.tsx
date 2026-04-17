@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { X, AlertTriangle, Users, Building2, Heart, UserPlus, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
-import type { Crisis } from '../../../types/crisis-map.types';
-import { CATEGORY_COLORS, URGENCY_COLORS } from '../../../types/crisis-map.types';
+import type { Crisis } from '../../types/crisis-map.types';
+import { CATEGORY_COLORS, URGENCY_COLORS } from '../../types/crisis-map.types';
 
 interface RightPanelProps {
   crisis: Crisis | null;

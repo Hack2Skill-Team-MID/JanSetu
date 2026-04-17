@@ -3,8 +3,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { Crisis, City } from '../../../types/crisis-map.types';
-import { CATEGORY_COLORS, URGENCY_COLORS } from '../../../types/crisis-map.types';
+import type { Crisis, City } from '../../types/crisis-map.types';
+import { CATEGORY_COLORS, URGENCY_COLORS } from '../../types/crisis-map.types';
 
 interface CrisisMapViewProps {
   crises: Crisis[];
@@ -103,11 +103,11 @@ export default function CrisisMapView({
       }
 
       circle.on('click', () => onMarkerClick(crisis));
-      circle.on('mouseover', function () {
-        this.setStyle({ radius: radius + 3, fillOpacity: 1 });
+      circle.on('mouseover', () => {
+        circle.setStyle({ radius: radius + 3, fillOpacity: 1 });
       });
-      circle.on('mouseout', function () {
-        this.setStyle({ radius, fillOpacity: 0.75 });
+      circle.on('mouseout', () => {
+        circle.setStyle({ radius, fillOpacity: 0.75 });
       });
 
       circle.bindTooltip(

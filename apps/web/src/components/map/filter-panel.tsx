@@ -1,7 +1,7 @@
 'use client';
 
 import { SlidersHorizontal, X } from 'lucide-react';
-import type { CrisisFilters, CrisisNGO } from '../../../types/crisis-map.types';
+import type { CrisisFilters, CrisisNGO } from '../../types/crisis-map.types';
 
 interface FilterPanelProps {
   filters: CrisisFilters;

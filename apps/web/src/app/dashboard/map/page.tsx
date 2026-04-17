@@ -50,6 +50,69 @@ const DEMO_NGOS: CrisisNGO[] = [
   { _id: 'n4', name: 'Tamil Nadu Aid Corps' },
 ];
 
+/* ── Coordinate lookup: maps any location/region string → [lng, lat] ──
+   Used to geocode DB entries that were stored with default [0, 0] coords. ─────── */
+const LOCATION_COORDS: Record<string, [number, number]> = {
+  // Cities / metro areas
+  'delhi ncr':   [77.1025, 28.7041],
+  'delhi':       [77.2090, 28.6139],
+  'new delhi':   [77.2090, 28.6139],
+  'mumbai':      [72.8777, 19.0760],
+  'bangalore':   [77.5946, 12.9716],
+  'bengaluru':   [77.5946, 12.9716],
+  'chennai':     [80.2707, 13.0827],
+  'kolkata':     [88.3639, 22.5726],
+  'hyderabad':   [78.4867, 17.3850],
+  'pune':        [73.8567, 18.5204],
+  'ahmedabad':   [72.5714, 23.0225],
+  'jaipur':      [75.7873, 26.9124],
+  'lucknow':     [80.9462, 26.8467],
+  'surat':       [72.8311, 21.1702],
+  'patna':       [85.1376, 25.5941],
+  'chandigarh':  [76.7794, 30.7333],
+  'bhopal':      [77.4126, 23.2599],
+  'indore':      [75.8577, 22.7196],
+  'nagpur':      [79.0882, 21.1458],
+  'kochi':       [76.2673, 9.9312],
+  'guwahati':    [91.7362, 26.1445],
+  // Sub-areas / neighborhoods
+  'dharavi':     [72.8540, 19.0444],
+  'noida':       [77.3910, 28.5355],
+  'gurgaon':     [77.0266, 28.4595],
+  'gurugram':    [77.0266, 28.4595],
+  'faridabad':   [77.3178, 28.4089],
+  'bandra':      [72.8295, 19.0596],
+  'andheri':     [72.8697, 19.1136],
+  'kurla':       [72.8826, 19.0728],
+  'whitefield':  [77.7499, 12.9698],
+  'koramangala': [77.6271, 12.9279],
+  'salt lake':   [88.4136, 22.5829],
+  'howrah':      [88.2636, 22.5958],
+  'old delhi':   [77.2310, 28.6562],
+  'marina':      [80.2707, 13.0500],
+  // States / broad regions
+  'maharashtra':  [75.7139, 19.7515],
+  'rajasthan':    [74.2179, 27.0238],
+  'uttar pradesh':[80.9462, 26.8467],
+  'bihar':        [85.3131, 25.0961],
+  'kerala':       [76.2711, 10.8505],
+  'karnataka':    [75.7139, 15.3173],
+  'tamil nadu':   [78.6569, 11.1271],
+  'west bengal':  [87.8550, 22.9868],
+  'gujarat':      [71.1924, 22.2587],
+};
+
+/** Return best-match [lng, lat] for a location/region string, or null if unknown */
+function geocodeLocation(location: string, region: string): [number, number] | null {
+  const search = [location, region].join(' ').toLowerCase();
+  // Try longest key match first (more specific)
+  const sorted = Object.keys(LOCATION_COORDS).sort((a, b) => b.length - a.length);
+  for (const key of sorted) {
+    if (search.includes(key)) return LOCATION_COORDS[key];
+  }
+  return null;
+}
+
 /* ── Apply filters in-memory ── */
 function applyFilters(crises: Crisis[], filters: CrisisFilters, search: string): Crisis[] {
   return crises.filter((c) => {
@@ -104,22 +167,35 @@ export default function CrisisMapPage() {
 
       const mappedCrises: Crisis[] = rawNeeds
         .filter((n: any) => n.coordinates && n.coordinates.length === 2)
-        .map((n: any) => ({
-          _id:               n._id || n.id,
-          title:             n.title,
-          description:       n.description,
-          category:          n.category,
-          urgencyLevel:      n.urgencyLevel || n.urgency || 'medium',
-          priorityScore:     n.priorityScore || 50,
-          status:            n.status,
-          location:          n.location,
-          region:            n.region || n.location,
-          coordinates:       n.coordinates as [number, number],
-          affectedPopulation: n.affectedPopulation,
-          ngoId:             n.ngoId,
-          aiInsights:        n.aiInsights,
-          createdAt:         n.createdAt,
-        }));
+        .map((n: any) => {
+          let coords: [number, number] = n.coordinates as [number, number];
+
+          // If coordinates are [0,0] (default/unset), try to geocode from location/region string
+          const isZero = coords[0] === 0 && coords[1] === 0;
+          if (isZero) {
+            const resolved = geocodeLocation(n.location || '', n.region || n.location || '');
+            if (resolved) coords = resolved;
+          }
+
+          return {
+            _id:                n._id || n.id,
+            title:             n.title,
+            description:       n.description,
+            category:          n.category,
+            urgencyLevel:      n.urgencyLevel || n.urgency || 'medium',
+            priorityScore:     n.priorityScore || 50,
+            status:            n.status,
+            location:          n.location,
+            region:            n.region || n.location,
+            coordinates:       coords,
+            affectedPopulation: n.affectedPopulation,
+            ngoId:             n.ngoId,
+            aiInsights:        n.aiInsights,
+            createdAt:         n.createdAt,
+          } as Crisis;
+        })
+        // Drop any that are still [0,0] after geocoding (truly unknown location)
+        .filter((c) => !(c.coordinates[0] === 0 && c.coordinates[1] === 0));
 
       const mappedNgos: CrisisNGO[] = rawNgos.map((o: any) => ({
         _id:  o._id || o.id,
