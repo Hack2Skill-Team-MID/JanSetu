@@ -14,14 +14,22 @@ router.get('/', async (req: Request, res: Response) => {
     const orgs = await prisma.organization.findMany({
       where,
       select: {
-        id: true, name: true, description: true, location: true, region: true,
-        focusAreas: true, trustScore: true, trustTier: true, isVerified: true,
-        website: true, statsVolunteersCount: true, statsCampaignsCount: true,
+        id: true, name: true, description: true, address: true, region: true,
+        trustScore: true, trustTier: true, verified: true,
+        website: true, statsTotalVolunteers: true, statsTotalCampaigns: true,
       },
       orderBy: { trustScore: 'desc' },
       take: 50,
     });
-    res.json({ success: true, data: { organizations: orgs.map(o => ({ ...o, _id: o.id })) } });
+    res.json({ success: true, data: { organizations: orgs.map((o: any) => ({
+      ...o, 
+      _id: o.id,
+      location: o.address, // Mapping schema to what frontend expects
+      isVerified: o.verified,
+      statsVolunteersCount: o.statsTotalVolunteers,
+      statsCampaignsCount: o.statsTotalCampaigns,
+      focusAreas: []
+    })) } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
