@@ -1,164 +1,396 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api } from '../../../lib/api';
-import DashboardLayout from '../../../components/layout/dashboard-layout';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Filter, Target, AlertTriangle, Users, Building2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import DashboardLayout from '../../../components/layout/dashboard-layout';
+import MapControls from '../../../components/map/map-controls';
+import FilterPanel from '../../../components/map/filter-panel';
+import RightPanel from '../../../components/map/right-panel';
+import AssignVolunteerModal from '../../../components/map/assign-volunteer-modal';
+import { api } from '../../../lib/api';
+import {
+  MapPin, Globe, ChevronDown, AlertTriangle, LayoutGrid,
+} from 'lucide-react';
+import type { Crisis, CrisisNGO, City, CrisisFilters } from '../../../types/crisis-map.types';
+import { CITIES, CATEGORY_COLORS, URGENCY_COLORS } from '../../../types/crisis-map.types';
 
-// Dynamically import map to avoid SSR issues with Leaflet
-const MapView = dynamic(() => import('../../../components/map/map-view'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[500px] bg-slate-900 rounded-2xl flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  ),
-});
+/* ── SSR-safe dynamic import ── */
+const CrisisMapView = dynamic(
+  () => import('../../../components/map/crisis-map-view'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center min-h-[480px] bg-slate-900/40 rounded-2xl">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-400">Loading crisis intelligence map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
-type MarkerData = {
-  id: string;
-  position: [number, number];
-  title: string;
-  type: 'need' | 'campaign' | 'ngo';
-  category?: string;
-  urgency?: string;
-  description?: string;
-};
+/* ── Seeded demo crises for when DB is empty ─────────────────── */
+const DEMO_CRISES: Crisis[] = [
+  { _id: 'c1', title: 'Dengue Outbreak — Dharavi Camp', description: 'Over 300 confirmed dengue cases in Dharavi slum cluster. Medical aid and mosquito control urgently needed.', category: 'health', urgencyLevel: 'critical', priorityScore: 98, status: 'reported', location: 'Dharavi, Mumbai', region: 'Mumbai', coordinates: [72.854, 19.044], affectedPopulation: 2800, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
+  { _id: 'c2', title: 'Flash Flood — Noida Sector 62', description: 'Severe waterlogging displacing families in low-lying sectors. Immediate rescue and sheltering required.', category: 'disaster', urgencyLevel: 'critical', priorityScore: 96, status: 'reported', location: 'Sector 62, Noida', region: 'Delhi NCR', coordinates: [77.391, 28.535], affectedPopulation: 1500, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
+  { _id: 'c3', title: 'Food Scarcity — Old Delhi Winter Camp', description: '500+ homeless families without adequate food supply during winter months.', category: 'food', urgencyLevel: 'high', priorityScore: 84, status: 'reported', location: 'Old Delhi', region: 'Delhi NCR', coordinates: [77.231, 28.656], affectedPopulation: 500, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
+  { _id: 'c4', title: 'School Dropout Crisis — Faridabad', description: 'High school dropout rates due to child labor in industrial zones. Education intervention needed.', category: 'education', urgencyLevel: 'medium', priorityScore: 65, status: 'reported', location: 'Faridabad', region: 'Delhi NCR', coordinates: [77.317, 28.408], affectedPopulation: 800, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
+  { _id: 'c5', title: 'Water Contamination — Bandra Slums', description: 'Lead and coliform contamination detected in municipal water supply in coastal slum clusters.', category: 'water', urgencyLevel: 'high', priorityScore: 88, status: 'reported', location: 'Bandra, Mumbai', region: 'Mumbai', coordinates: [72.829, 19.059], affectedPopulation: 3200, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
+  { _id: 'c6', title: 'Child Malnutrition — Andheri East', description: 'Severe acute malnutrition detected in children under 5 in resettlement colony.', category: 'food', urgencyLevel: 'high', priorityScore: 87, status: 'reported', location: 'Andheri East, Mumbai', region: 'Mumbai', coordinates: [72.869, 19.113], affectedPopulation: 620, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
+  { _id: 'c7', title: 'Urban Heat Crisis — Whitefield', description: 'Extreme heat affecting construction workers with no shade or water infrastructure in new zones.', category: 'safety', urgencyLevel: 'medium', priorityScore: 71, status: 'reported', location: 'Whitefield, Bangalore', region: 'Bangalore', coordinates: [77.749, 12.969], affectedPopulation: 1100, ngoId: { _id: 'n3', name: 'Karnataka Seva Samiti' } },
+  { _id: 'c8', title: 'Cyclone Refugees — Chennai Coast', description: 'Fishermen communities displaced by recent cyclone, temporary shelters collapsing.', category: 'disaster', urgencyLevel: 'critical', priorityScore: 95, status: 'reported', location: 'Marina Beach, Chennai', region: 'Chennai', coordinates: [80.270, 13.082], affectedPopulation: 4500, ngoId: { _id: 'n4', name: 'Tamil Nadu Aid Corps' } },
+];
 
-export default function MapPage() {
-  const [markers, setMarkers] = useState<MarkerData[]>([]);
-  const [filter, setFilter] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
+const DEMO_NGOS: CrisisNGO[] = [
+  { _id: 'n1', name: 'Aarogya Sewa Trust' },
+  { _id: 'n2', name: 'Delhi Relief Foundation' },
+  { _id: 'n3', name: 'Karnataka Seva Samiti' },
+  { _id: 'n4', name: 'Tamil Nadu Aid Corps' },
+];
 
-  useEffect(() => {
-    const fetchMapData = async () => {
-      try {
-        const [needsRes, campaignsRes, ngosRes] = await Promise.all([
-          api.get('/needs'),
-          api.get('/campaigns'),
-          api.get('/network/ngos'),
-        ]);
+/* ── Apply filters in-memory ── */
+function applyFilters(crises: Crisis[], filters: CrisisFilters, search: string): Crisis[] {
+  return crises.filter((c) => {
+    const matchSearch =
+      !search ||
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.category.toLowerCase().includes(search.toLowerCase()) ||
+      c.region.toLowerCase().includes(search.toLowerCase()) ||
+      c.location.toLowerCase().includes(search.toLowerCase());
 
-        const allMarkers: MarkerData[] = [];
+    const matchUrgency  = filters.urgency === 'all'   || c.urgencyLevel === filters.urgency;
+    const matchCategory = filters.category === 'all'  || c.category === filters.category;
+    const matchNgo      = filters.ngoId === 'all'     ||
+      (typeof c.ngoId === 'object' ? c.ngoId?._id === filters.ngoId : c.ngoId === filters.ngoId);
 
-        // Add needs
-        if (needsRes.data.success) {
-          (needsRes.data.data || []).forEach((n: any) => {
-            if (n.coordinates?.length === 2) {
-              allMarkers.push({
-                id: n._id, position: [n.coordinates[1], n.coordinates[0]],
-                title: n.title, type: 'need', category: n.category,
-                urgency: n.urgency, description: n.description?.slice(0, 120),
-              });
-            }
-          });
-        }
+    return matchSearch && matchUrgency && matchCategory && matchNgo;
+  });
+}
 
-        // Add campaigns
-        if (campaignsRes.data.success) {
-          (campaignsRes.data.data?.campaigns || []).forEach((c: any) => {
-            if (c.coordinates?.length === 2) {
-              allMarkers.push({
-                id: c._id, position: [c.coordinates[1], c.coordinates[0]],
-                title: c.title, type: 'campaign', category: c.category,
-                description: c.description?.slice(0, 120),
-              });
-            }
-          });
-        }
+/* ════════════════════════════════════════════════════
+   PAGE
+   ════════════════════════════════════════════════════ */
+export default function CrisisMapPage() {
+  const router = useRouter();
 
-        // Add NGOs
-        if (ngosRes.data.success) {
-          (ngosRes.data.data?.organizations || []).forEach((o: any) => {
-            if (o.coordinates?.length === 2) {
-              allMarkers.push({
-                id: o._id, position: [o.coordinates[1], o.coordinates[0]],
-                title: o.name, type: 'ngo', description: o.description?.slice(0, 120),
-              });
-            }
-          });
-        }
+  /* ── Global state ── */
+  const [allCrises, setAllCrises]         = useState<Crisis[]>([]);
+  const [ngos, setNgos]                   = useState<CrisisNGO[]>([]);
+  const [selectedCity, setSelectedCity]   = useState<City | null>(null);
+  const [selectedCrisis, setSelectedCrisis] = useState<Crisis | null>(null);
+  const [isLive, setIsLive]               = useState(true);
+  const [searchQuery, setSearchQuery]     = useState('');
+  const [filters, setFilters]             = useState<CrisisFilters>({
+    urgency: 'all', category: 'all', ngoId: 'all',
+  });
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showCityMenu, setShowCityMenu]   = useState(false);
+  const [isLoading, setIsLoading]         = useState(true);
+  const [usingDemo, setUsingDemo]         = useState(false);
 
-        setMarkers(allMarkers);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+  /* ── Fetch ── */
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [needsRes, ngosRes] = await Promise.all([
+        api.get('/needs?limit=100').catch(() => ({ data: { success: false } })),
+        api.get('/network/ngos').catch(() => ({ data: { success: false } })),
+      ]);
+
+      const rawNeeds: any[] = needsRes.data?.data || [];
+      const rawNgos: any[]  = ngosRes.data?.data?.organizations || ngosRes.data?.data || [];
+
+      const mappedCrises: Crisis[] = rawNeeds
+        .filter((n: any) => n.coordinates && n.coordinates.length === 2)
+        .map((n: any) => ({
+          _id:               n._id || n.id,
+          title:             n.title,
+          description:       n.description,
+          category:          n.category,
+          urgencyLevel:      n.urgencyLevel || n.urgency || 'medium',
+          priorityScore:     n.priorityScore || 50,
+          status:            n.status,
+          location:          n.location,
+          region:            n.region || n.location,
+          coordinates:       n.coordinates as [number, number],
+          affectedPopulation: n.affectedPopulation,
+          ngoId:             n.ngoId,
+          aiInsights:        n.aiInsights,
+          createdAt:         n.createdAt,
+        }));
+
+      const mappedNgos: CrisisNGO[] = rawNgos.map((o: any) => ({
+        _id:  o._id || o.id,
+        name: o.name,
+      }));
+
+      if (mappedCrises.length > 0) {
+        setAllCrises(mappedCrises);
+        setUsingDemo(false);
+      } else {
+        setAllCrises(DEMO_CRISES);
+        setUsingDemo(true);
       }
-    };
-    fetchMapData();
+
+      setNgos(mappedNgos.length > 0 ? mappedNgos : DEMO_NGOS);
+    } catch {
+      setAllCrises(DEMO_CRISES);
+      setNgos(DEMO_NGOS);
+      setUsingDemo(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const filtered = filter === 'all' ? markers : markers.filter((m) => m.type === filter);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const counts = {
-    all: markers.length,
-    need: markers.filter((m) => m.type === 'need').length,
-    campaign: markers.filter((m) => m.type === 'campaign').length,
-    ngo: markers.filter((m) => m.type === 'ngo').length,
-  };
+  /* ── Filtered crises (city + filters + search) ── */
+  const cityFilteredCrises = useMemo(() => {
+    if (!selectedCity) return allCrises;
+    return allCrises.filter((c) =>
+      c.region.toLowerCase().includes(selectedCity.name.toLowerCase()) ||
+      selectedCity.regions.some((r) => c.region.toLowerCase().includes(r.name.toLowerCase()))
+    );
+  }, [allCrises, selectedCity]);
+
+  const filteredCrises = useMemo(
+    () => applyFilters(cityFilteredCrises, filters, searchQuery),
+    [cityFilteredCrises, filters, searchQuery]
+  );
+
+  /* ── Handlers ── */
+  const handleAssignVolunteer = useCallback(
+    async (crisisId: string, data: { volunteerName: string; volunteerId: string }) => {
+      try {
+        await api.post(`/volunteers/assign`, { crisisId, ...data }).catch(() => null);
+        console.log('Volunteer assigned (demo):', data);
+      } catch { /* non-critical */ }
+    },
+    []
+  );
+
+  const handleDonate = useCallback(
+    (crisisId: string) => {
+      router.push(`/dashboard/donate?source=crisis&crisisId=${crisisId}`);
+    },
+    [router]
+  );
+
+  const handleFetchInsights = useCallback(async (crisisId: string): Promise<string> => {
+    try {
+      const res = await api.post('/ai-bridge/extract-insights', {
+        text: filteredCrises.find((c) => c._id === crisisId)?.description || '',
+      });
+      return res.data?.summary || res.data?.data?.summary || 'AI analysis unavailable at this time.';
+    } catch {
+      const crisis = filteredCrises.find((c) => c._id === crisisId);
+      if (crisis?.aiInsights) return crisis.aiInsights;
+      return `Based on the ${crisis?.category || 'category'} crisis in ${crisis?.region || 'the region'} affecting approximately ${crisis?.affectedPopulation?.toLocaleString() || 'an unknown number of'} people, this is classified as ${crisis?.urgencyLevel} urgency. Immediate deployment of ${crisis?.category === 'health' ? 'medical teams' : crisis?.category === 'food' ? 'food distribution units' : 'relief resources'} is recommended.`;
+    }
+  }, [filteredCrises]);
+
+  /* ── Urgency counts ── */
+  const urgencyCounts = useMemo(() => ({
+    critical: filteredCrises.filter((c) => c.urgencyLevel === 'critical').length,
+    high:     filteredCrises.filter((c) => c.urgencyLevel === 'high').length,
+    medium:   filteredCrises.filter((c) => c.urgencyLevel === 'medium').length,
+    low:      filteredCrises.filter((c) => c.urgencyLevel === 'low').length,
+  }), [filteredCrises]);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-5 h-full">
+
+        {/* ── Header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-              <MapPin className="w-6 h-6 text-indigo-400" />
-              Impact Map
+              <Globe className="w-6 h-6 text-indigo-400" />
+              Crisis Intelligence Map
             </h1>
-            <p className="text-slate-400 mt-1">Visualize needs, campaigns, and NGOs across India</p>
+            <p className="text-slate-400 text-sm mt-1">
+              Live crisis visualization across India · {filteredCrises.length} active crises
+              {usingDemo && <span className="ml-2 text-xs text-amber-400">(demo data)</span>}
+            </p>
+          </div>
+
+          {/* City selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCityMenu(!showCityMenu)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/80 border border-slate-700 hover:border-indigo-500/50 rounded-xl text-sm font-medium text-slate-200 transition-all"
+            >
+              <MapPin className="w-4 h-4 text-indigo-400" />
+              {selectedCity ? selectedCity.name : 'All India'}
+              <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${showCityMenu ? 'rotate-180' : ''}`} />
+            </button>
+            {showCityMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <button
+                  onClick={() => { setSelectedCity(null); setShowCityMenu(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-800 transition-colors ${!selectedCity ? 'text-indigo-400 font-semibold' : 'text-slate-300'}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5 inline mr-2" />All India
+                </button>
+                {CITIES.map((city) => (
+                  <button
+                    key={city.name}
+                    onClick={() => { setSelectedCity(city); setShowCityMenu(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-800 transition-colors ${selectedCity?.name === city.name ? 'text-indigo-400 font-semibold' : 'text-slate-300'}`}
+                  >
+                    <MapPin className="w-3.5 h-3.5 inline mr-2" />{city.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 flex-wrap">
-          {([
-            { key: 'all', label: 'All', icon: Filter, count: counts.all },
-            { key: 'need', label: 'Needs', icon: AlertTriangle, count: counts.need },
-            { key: 'campaign', label: 'Campaigns', icon: Target, count: counts.campaign },
-            { key: 'ngo', label: 'NGOs', icon: Building2, count: counts.ngo },
-          ] as const).map((f) => (
-            <button key={f.key} onClick={() => setFilter(f.key)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
-                filter === f.key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-slate-700'
-              }`}>
-              <f.icon className="w-4 h-4" />
-              {f.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-md ${
-                filter === f.key ? 'bg-white/20' : 'bg-slate-700'
-              }`}>{f.count}</span>
-            </button>
+        {/* ── Urgency summary pills ── */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(
+            [
+              { label: 'Critical', key: 'critical', color: 'bg-red-500/20 text-red-400 border-red-500/40' },
+              { label: 'High',     key: 'high',     color: 'bg-orange-500/20 text-orange-400 border-orange-500/40' },
+              { label: 'Medium',   key: 'medium',   color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40' },
+              { label: 'Low',      key: 'low',      color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },
+            ] as const
+          ).map(({ label, key, color }) => (
+            <span key={key} className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border ${color}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              {urgencyCounts[key]} {label}
+            </span>
           ))}
         </div>
 
-        {/* Map */}
-        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-          {isLoading ? (
-            <div className="w-full h-[500px] flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
-            <MapView markers={filtered} />
-          )}
-        </div>
+        {/* ── Controls ── */}
+        <MapControls
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          isLive={isLive}
+          onToggleLive={() => setIsLive(!isLive)}
+          onRefresh={fetchData}
+          totalCrises={allCrises.length}
+          filteredCount={filteredCrises.length}
+        />
 
-        {/* Legend */}
-        <div className="flex items-center gap-6 text-xs text-slate-400">
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500"></span> Community Needs
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-indigo-500"></span> Active Campaigns
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500"></span> NGO Offices
-          </span>
+        {/* ── Main grid (map + side panels) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-4" style={{ minHeight: '560px' }}>
+
+          {/* Left — Filter panel */}
+          <div className="lg:block">
+            <FilterPanel filters={filters} onChange={setFilters} ngos={ngos} />
+
+            {/* City regions */}
+            {selectedCity && selectedCity.regions.length > 0 && (
+              <div className="mt-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+                <h3 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  Regions in {selectedCity.name}
+                </h3>
+                <ul className="space-y-1">
+                  {selectedCity.regions.map((r) => {
+                    const count = filteredCrises.filter((c) =>
+                      c.region.toLowerCase().includes(r.name.toLowerCase()) ||
+                      c.location.toLowerCase().includes(r.name.toLowerCase())
+                    ).length;
+                    return (
+                      <li
+                        key={r.name}
+                        className="flex items-center justify-between text-xs py-1 px-2 rounded-lg hover:bg-slate-800/40 transition-colors cursor-default"
+                      >
+                        <span className="text-slate-400">{r.name}</span>
+                        {count > 0 && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">
+                            {count}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* Legend */}
+            <div className="mt-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+              <h3 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Legend</h3>
+              <div className="space-y-1.5">
+                {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
+                  <div key={cat} className="flex items-center gap-2 text-xs text-slate-400">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                    <span className="capitalize">{cat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Center — Map */}
+          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden" style={{ minHeight: '480px' }}>
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center min-h-[480px]">
+                <div className="text-center space-y-3">
+                  <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-slate-400">Fetching crisis data...</p>
+                </div>
+              </div>
+            ) : !isLive ? (
+              <div className="w-full h-full flex items-center justify-center min-h-[480px]">
+                <div className="text-center space-y-3">
+                  <AlertTriangle className="w-12 h-12 text-slate-600 mx-auto" />
+                  <p className="text-slate-400 font-medium">Live mode is paused</p>
+                  <p className="text-sm text-slate-500">Enable LIVE to show crisis markers</p>
+                  <button
+                    onClick={() => setIsLive(true)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all"
+                  >
+                    Enable Live
+                  </button>
+                </div>
+              </div>
+            ) : filteredCrises.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center min-h-[480px]">
+                <div className="text-center space-y-3">
+                  <MapPin className="w-12 h-12 text-slate-600 mx-auto" />
+                  <p className="text-slate-400 font-medium">Not registered yet</p>
+                  <p className="text-sm text-slate-500">No crises match your current filters</p>
+                </div>
+              </div>
+            ) : (
+              <CrisisMapView
+                crises={filteredCrises}
+                selectedCity={selectedCity}
+                isLive={isLive}
+                onMarkerClick={setSelectedCrisis}
+                selectedCrisis={selectedCrisis}
+              />
+            )}
+          </div>
+
+          {/* Right — Crisis detail panel */}
+          <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden flex flex-col" style={{ minHeight: '480px' }}>
+            <RightPanel
+              crisis={selectedCrisis}
+              onClose={() => setSelectedCrisis(null)}
+              onAssignVolunteer={() => setShowAssignModal(true)}
+              onDonate={handleDonate}
+              onFetchInsights={handleFetchInsights}
+            />
+          </div>
         </div>
       </div>
+
+      {/* ── Assign volunteer modal ── */}
+      {showAssignModal && selectedCrisis && (
+        <AssignVolunteerModal
+          crisisId={selectedCrisis._id}
+          crisisTitle={selectedCrisis.title}
+          onAssign={handleAssignVolunteer}
+          onClose={() => setShowAssignModal(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -237,7 +237,7 @@ export default function MessagesPage() {
                     </div>
                   ) : (
                     messages.map((m: any, idx: number) => {
-                      const myId = user?._id || user?.id;
+                      const myId = user?._id;
                       const senderId = typeof m.senderId === 'object' ? (m.senderId?._id || m.senderId?.id) : m.senderId;
                       const isMe = senderId === myId || senderId === 'me';
                       return (
