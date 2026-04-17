@@ -194,7 +194,10 @@ createdb jansetu
 cd server
 npx prisma migrate deploy
 
-# Step 3 — Seed with full demo dataset
+# Step 3 — Generate Prisma client (REQUIRED before seeding on fresh clone)
+npx prisma generate
+
+# Step 4 — Seed with full demo dataset
 npm run seed
 ```
 
