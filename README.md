@@ -29,7 +29,7 @@ JanSetu solves this with:
 - 💳 **Razorpay** — real payment gateway for donation processing
 - 🔔 **Real-time Notifications** — bell icon with 30s polling, mark-read, delete
 - 📄 **PDF Donation Receipts** — printable receipts with transaction details & 80G note
-- 🗺️ **Live Impact Map** — visualize needs and campaigns geographically
+- 🗺️ **Crisis Intelligence Map** — full-screen glassmorphism map with auto-panning city search and live incident tracking
 - 🔐 **Trust scoring & fraud detection** — accountable NGO operations
 - 🚨 **Emergency mode** — rapid disaster response with auto-broadcasts
 - 🏆 **Gamification** — leaderboard, badges, and volunteer points
@@ -56,11 +56,12 @@ JanSetu solves this with:
 | Role | Email |
 |------|-------|
 | Platform Admin | `admin@jansetu.org` |
-| NGO Admin | `priya@helpindia.org` |
-| NGO Admin 2 | `kavitha@sahayatrust.org` |
-| Volunteer | `rohit@gmail.com` |
-| Community Member | `sneha@gmail.com` |
-| Donor | `vikram@gmail.com` |
+| NGO Admin 1 (HelpIndia) | `priya@helpindia.org` |
+| NGO Admin 2 (Sahaya Trust) | `kavitha@sahayatrust.org` |
+| NGO Admin 3 (GreenEarth) | `sanjay@greenearth.org` |
+| Volunteer | `rohit@gmail.com` | `sneha@gmail.com` | `arjun@gmail.com` |
+| Community Member | `ravi@gmail.com` |
+| Donor | `vikram@gmail.com` | `ananya@gmail.com` |
 
 ---
 
@@ -73,11 +74,17 @@ JanSetu solves this with:
 - Delete notifications
 - Triggered by: donation completion, join requests, task assignments
 
+### 🗺️ Crisis Intelligence Map (Live Dashboard)
+- Full-screen, high-performance interactive Leaflet footprint with a glassmorphism overlay.
+- Search-to-pan functionality that dynamically zooms to active crisis cities.
+- Custom styled map markers mapping backend incident categories to rich UI color-coding.
+- Right-panel data layer for detailed insights into live incidents, avoiding map clutter from hover scaling.
+
 ### 🤖 AI Task Matcher (Volunteers)
 - Select your skills from 15 predefined options
 - Enter location and availability preference
 - AI scores open tasks by skill match + location proximity
-- One-click apply from the results
+- Fully seeded with dynamic Task Applications bridging mock profiles to open operations.
 
 ### 🏛️ NGO Discovery + Apply (Community)
 - Browse all verified NGOs with trust tier badges
@@ -188,7 +195,7 @@ createdb jansetu
 # Run migrations
 cd server && npx prisma migrate deploy
 
-# Seed with demo data (8 users, 2 orgs, 4 campaigns, etc.)
+# Seed with enriched demo data (Multiple roles, heavily populated tasks/donations)
 npm run seed
 ```
 
