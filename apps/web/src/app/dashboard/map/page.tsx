@@ -1,17 +1,14 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '../../../components/layout/dashboard-layout';
-import MapControls from '../../../components/map/map-controls';
-import FilterPanel from '../../../components/map/filter-panel';
 import RightPanel from '../../../components/map/right-panel';
-import AssignVolunteerModal from '../../../components/map/assign-volunteer-modal';
 import { api } from '../../../lib/api';
 import {
-  MapPin, Globe, ChevronDown, AlertTriangle, LayoutGrid,
-  Search, Filter, Sparkles, ChevronUp,
+  MapPin, ChevronDown, AlertTriangle, LayoutGrid,
+  Search, Filter,
 } from 'lucide-react';
 import type { Crisis, CrisisNGO, City, CrisisFilters } from '../../../types/crisis-map.types';
 import { CITIES, CATEGORY_COLORS, URGENCY_COLORS } from '../../../types/crisis-map.types';
@@ -31,25 +28,6 @@ const CrisisMapView = dynamic(
     ),
   }
 );
-
-/* ── Seeded demo crises for when DB is empty ─────────────────── */
-const DEMO_CRISES: Crisis[] = [
-  { _id: 'c1', title: 'Dengue Outbreak — Dharavi Camp', description: 'Over 300 confirmed dengue cases in Dharavi slum cluster. Medical aid and mosquito control urgently needed.', category: 'health', urgencyLevel: 'critical', priorityScore: 98, status: 'reported', location: 'Dharavi, Mumbai', region: 'Mumbai', coordinates: [72.854, 19.044], affectedPopulation: 2800, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
-  { _id: 'c2', title: 'Flash Flood — Noida Sector 62', description: 'Severe waterlogging displacing families in low-lying sectors. Immediate rescue and sheltering required.', category: 'disaster', urgencyLevel: 'critical', priorityScore: 96, status: 'reported', location: 'Sector 62, Noida', region: 'Delhi NCR', coordinates: [77.391, 28.535], affectedPopulation: 1500, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
-  { _id: 'c3', title: 'Food Scarcity — Old Delhi Winter Camp', description: '500+ homeless families without adequate food supply during winter months.', category: 'food', urgencyLevel: 'high', priorityScore: 84, status: 'reported', location: 'Old Delhi', region: 'Delhi NCR', coordinates: [77.231, 28.656], affectedPopulation: 500, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
-  { _id: 'c4', title: 'School Dropout Crisis — Faridabad', description: 'High school dropout rates due to child labor in industrial zones. Education intervention needed.', category: 'education', urgencyLevel: 'medium', priorityScore: 65, status: 'reported', location: 'Faridabad', region: 'Delhi NCR', coordinates: [77.317, 28.408], affectedPopulation: 800, ngoId: { _id: 'n2', name: 'Delhi Relief Foundation' } },
-  { _id: 'c5', title: 'Water Contamination — Bandra Slums', description: 'Lead and coliform contamination detected in municipal water supply in coastal slum clusters.', category: 'water', urgencyLevel: 'high', priorityScore: 88, status: 'reported', location: 'Bandra, Mumbai', region: 'Mumbai', coordinates: [72.829, 19.059], affectedPopulation: 3200, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
-  { _id: 'c6', title: 'Child Malnutrition — Andheri East', description: 'Severe acute malnutrition detected in children under 5 in resettlement colony.', category: 'food', urgencyLevel: 'high', priorityScore: 87, status: 'reported', location: 'Andheri East, Mumbai', region: 'Mumbai', coordinates: [72.869, 19.113], affectedPopulation: 620, ngoId: { _id: 'n1', name: 'Aarogya Sewa Trust' } },
-  { _id: 'c7', title: 'Urban Heat Crisis — Whitefield', description: 'Extreme heat affecting construction workers with no shade or water infrastructure in new zones.', category: 'safety', urgencyLevel: 'medium', priorityScore: 71, status: 'reported', location: 'Whitefield, Bangalore', region: 'Bangalore', coordinates: [77.749, 12.969], affectedPopulation: 1100, ngoId: { _id: 'n3', name: 'Karnataka Seva Samiti' } },
-  { _id: 'c8', title: 'Cyclone Refugees — Chennai Coast', description: 'Fishermen communities displaced by recent cyclone, temporary shelters collapsing.', category: 'disaster', urgencyLevel: 'critical', priorityScore: 95, status: 'reported', location: 'Marina Beach, Chennai', region: 'Chennai', coordinates: [80.270, 13.082], affectedPopulation: 4500, ngoId: { _id: 'n4', name: 'Tamil Nadu Aid Corps' } },
-];
-
-const DEMO_NGOS: CrisisNGO[] = [
-  { _id: 'n1', name: 'Aarogya Sewa Trust' },
-  { _id: 'n2', name: 'Delhi Relief Foundation' },
-  { _id: 'n3', name: 'Karnataka Seva Samiti' },
-  { _id: 'n4', name: 'Tamil Nadu Aid Corps' },
-];
 
 /* ── Coordinate lookup: maps any location/region string → [lng, lat] ──
    Used to geocode DB entries that were stored with default [0, 0] coords. ─────── */
@@ -117,12 +95,23 @@ function geocodeLocation(location: string, region: string): [number, number] | n
 /* ── Apply filters in-memory ── */
 function applyFilters(crises: Crisis[], filters: CrisisFilters, search: string): Crisis[] {
   return crises.filter((c) => {
+    const locationStr = typeof c.location === 'object' && c.location !== null && 'city' in c.location
+      ? `${c.location.city} ${c.location.region}`
+      : String(c.location || '');
+
+    const q = search.toLowerCase();
+    // If the search matches a region/city name, show all crises in that area (don't filter by title)
+    const isCitySearch = CITIES.some(
+      (city) => city.name.toLowerCase().includes(q) || q.includes(city.name.toLowerCase())
+    );
+
     const matchSearch =
       !search ||
-      c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.category.toLowerCase().includes(search.toLowerCase()) ||
-      c.region.toLowerCase().includes(search.toLowerCase()) ||
-      c.location.toLowerCase().includes(search.toLowerCase());
+      isCitySearch || // city search → let cityFilteredCrises do the narrowing
+      c.title.toLowerCase().includes(q) ||
+      c.category.toLowerCase().includes(q) ||
+      (c.region || '').toLowerCase().includes(q) ||
+      locationStr.toLowerCase().includes(q);
 
     const matchUrgency = filters.urgency === 'all' || c.urgencyLevel === filters.urgency;
     const matchCategory = filters.category === 'all' || c.category === filters.category;
@@ -149,12 +138,9 @@ export default function CrisisMapPage() {
   const [filters, setFilters] = useState<CrisisFilters>({
     urgency: 'all', category: 'all', ngoId: 'all',
   });
-  const [showAssignModal, setShowAssignModal] = useState(false);
   const [showCityMenu, setShowCityMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [usingDemo, setUsingDemo] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
-  const [showAIInsight, setShowAIInsight] = useState(true);
 
   /* ── Fetch ── */
   const fetchData = useCallback(async () => {
@@ -184,7 +170,17 @@ export default function CrisisMapPage() {
             _id: n._id || n.id,
             title: n.title,
             description: n.description,
-            category: n.category,
+            category: (() => {
+              const cat = n.category || 'other';
+              const map: Record<string, string> = {
+                healthcare: 'health', medical: 'health',
+                disaster_relief: 'disaster', flood: 'disaster', cyclone: 'disaster',
+                food_nutrition: 'food', hunger: 'food',
+                water_sanitation: 'water',
+                shelter: 'safety', safety_security: 'safety',
+              };
+              return map[cat] ?? cat;
+            })(),
             urgencyLevel: n.urgencyLevel || n.urgency || 'medium',
             priorityScore: n.priorityScore || 50,
             status: n.status,
@@ -198,7 +194,7 @@ export default function CrisisMapPage() {
           } as Crisis;
         })
         // Drop any that are still [0,0] after geocoding (truly unknown location)
-        .filter((c) => !(c.coordinates[0] === 0 && c.coordinates[1] === 0));
+        .filter((c) => !c.coordinates || !(c.coordinates[0] === 0 && c.coordinates[1] === 0));
 
       const mappedNgos: CrisisNGO[] = rawNgos.map((o: any) => ({
         _id: o._id || o.id,
@@ -207,17 +203,14 @@ export default function CrisisMapPage() {
 
       if (mappedCrises.length > 0) {
         setAllCrises(mappedCrises);
-        setUsingDemo(false);
       } else {
-        setAllCrises(DEMO_CRISES);
-        setUsingDemo(true);
+        setAllCrises([]);
       }
 
-      setNgos(mappedNgos.length > 0 ? mappedNgos : DEMO_NGOS);
+      setNgos(mappedNgos);
     } catch {
-      setAllCrises(DEMO_CRISES);
-      setNgos(DEMO_NGOS);
-      setUsingDemo(true);
+      setAllCrises([]);
+      setNgos([]);
     } finally {
       setIsLoading(false);
     }
@@ -225,13 +218,46 @@ export default function CrisisMapPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  /* ── Auto-pan map when search matches a registered city ── */
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      // If the user clears the search, reset to All India only if city was auto-selected by search
+      // We track this with a flag via the selectedCity name matching the query
+      return;
+    }
+    const q = searchQuery.toLowerCase().trim();
+    const matched = CITIES.find((city) =>
+      city.name.toLowerCase().includes(q) ||
+      q.includes(city.name.toLowerCase())
+    );
+    if (matched) {
+      setSelectedCity(matched);
+    }
+  }, [searchQuery]);
+
+  /* ── Clear city selection when search is cleared ── */
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSelectedCity(null);
+    }
+  }, [searchQuery]);
+
   /* ── Filtered crises (city + filters + search) ── */
   const cityFilteredCrises = useMemo(() => {
     if (!selectedCity) return allCrises;
-    return allCrises.filter((c) =>
-      c.region.toLowerCase().includes(selectedCity.name.toLowerCase()) ||
-      selectedCity.regions.some((r) => c.region.toLowerCase().includes(r.name.toLowerCase()))
-    );
+    return allCrises.filter((c) => {
+      const loc = typeof c.location === 'object' && c.location !== null && 'city' in c.location
+        ? c.location.city
+        : c.region || '';
+      return (
+        loc.toLowerCase().includes(selectedCity.name.toLowerCase()) ||
+        (c.region || '').toLowerCase().includes(selectedCity.name.toLowerCase()) ||
+        selectedCity.regions.some((r) =>
+          (c.region || '').toLowerCase().includes(r.name.toLowerCase()) ||
+          loc.toLowerCase().includes(r.name.toLowerCase())
+        )
+      );
+    });
   }, [allCrises, selectedCity]);
 
   const filteredCrises = useMemo(
@@ -240,16 +266,6 @@ export default function CrisisMapPage() {
   );
 
   /* ── Handlers ── */
-  const handleAssignVolunteer = useCallback(
-    async (crisisId: string, data: { volunteerName: string; volunteerId: string }) => {
-      try {
-        await api.post(`/volunteers/assign`, { crisisId, ...data }).catch(() => null);
-        console.log('Volunteer assigned (demo):', data);
-      } catch { /* non-critical */ }
-    },
-    []
-  );
-
   const handleDonate = useCallback(
     (crisisId: string) => {
       router.push(`/dashboard/donate?source=crisis&crisisId=${crisisId}`);
@@ -322,11 +338,11 @@ export default function CrisisMapPage() {
 
         {/* NO-CRISES overlay */}
         {isLive && !isLoading && filteredCrises.length === 0 && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ background: 'rgba(5,8,15,0.5)' }}>
-            <div className="text-center space-y-2">
-              <MapPin className="w-10 h-10 text-slate-600 mx-auto" />
-              <p className="text-sm font-semibold text-slate-400">Not registered yet</p>
-              <p className="text-xs text-slate-600">No crises match your filters</p>
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ background: 'rgba(5,8,15,0.4)', backdropFilter: 'blur(2px)' }}>
+            <div className="text-center space-y-2 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 rounded-xl shadow-lg">
+              <MapPin className="w-8 h-8 text-white/50 mx-auto" />
+              <p className="text-sm font-semibold text-white/90">👉 Not registered yet</p>
+              <p className="text-xs text-white/60">No crises match your filters</p>
             </div>
           </div>
         )}
@@ -337,20 +353,19 @@ export default function CrisisMapPage() {
           <div className="relative flex-shrink-0">
             <button
               onClick={() => { setShowCityMenu(!showCityMenu); setShowFilterPanel(false); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 transition-all"
-              style={{ background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(8px)' }}
+              className="flex items-center gap-1.5 px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-xs font-semibold shadow-lg transition-all hover:bg-white/20"
             >
               {selectedCity ? selectedCity.name : 'All India'}
-              <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${showCityMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 text-white/70 transition-transform ${showCityMenu ? 'rotate-180' : ''}`} />
             </button>
             {showCityMenu && (
-              <div className="absolute left-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-50 shadow-2xl py-1" style={{ background: 'rgba(10,16,28,0.98)', border: '1px solid rgba(51,65,85,0.6)' }}>
-                <button onClick={() => { setSelectedCity(null); setShowCityMenu(false); }} className={`w-full text-left px-3 py-2 text-xs hover:bg-slate-800/60 flex items-center gap-2 transition-colors ${!selectedCity ? 'text-indigo-400 font-semibold' : 'text-slate-400'}`}>
+              <div className="absolute left-0 top-full mt-1.5 w-44 rounded-xl overflow-hidden z-50 shadow-lg py-1 bg-white/10 backdrop-blur-md border border-white/20">
+                <button onClick={() => { setSelectedCity(null); setShowCityMenu(false); }} className={`w-full text-left px-3 py-2 text-xs hover:bg-white/20 flex items-center gap-2 transition-colors ${!selectedCity ? 'text-blue-300 font-semibold bg-white/5' : 'text-white/80'}`}>
                   <LayoutGrid className="w-3 h-3" /> All India
                 </button>
-                <div className="border-t border-slate-800/40 my-1" />
+                <div className="border-t border-white/20 my-1" />
                 {CITIES.map((city) => (
-                  <button key={city.name} onClick={() => { setSelectedCity(city); setShowCityMenu(false); }} className={`w-full text-left px-3 py-2 text-xs hover:bg-slate-800/60 flex items-center gap-2 transition-colors ${selectedCity?.name === city.name ? 'text-indigo-400 font-semibold' : 'text-slate-400'}`}>
+                  <button key={city.name} onClick={() => { setSelectedCity(city); setShowCityMenu(false); }} className={`w-full text-left px-3 py-2 text-xs hover:bg-white/20 flex items-center gap-2 transition-colors ${selectedCity?.name === city.name ? 'text-blue-300 font-semibold bg-white/5' : 'text-white/80'}`}>
                     <MapPin className="w-3 h-3" /> {city.name}
                   </button>
                 ))}
@@ -361,16 +376,16 @@ export default function CrisisMapPage() {
           {/* Search */}
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
-            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search locations, issues..." className="w-full pl-8 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 rounded-xl focus:outline-none transition-all" style={{ background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(8px)' }} />
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search locations, issues..." className="w-full pl-8 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 rounded-xl focus:outline-none transition-all" style={{ background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(8px)' }} />
           </div>
 
           {/* Filter */}
           <div className="relative flex-shrink-0">
-            <button onClick={() => { setShowFilterPanel(!showFilterPanel); setShowCityMenu(false); }} className={`p-2 rounded-xl transition-all ${showFilterPanel ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'}`} style={{ background: 'rgba(13,20,35,0.92)', border: `1px solid ${showFilterPanel ? 'rgba(99,102,241,0.5)' : 'rgba(51,65,85,0.6)'}`, backdropFilter: 'blur(8px)' }} title="Filters">
+            <button onClick={() => { setShowFilterPanel(!showFilterPanel); setShowCityMenu(false); }} className={`p-2 rounded-xl transition-all shadow-lg bg-white/10 backdrop-blur-md border ${showFilterPanel ? 'border-blue-400/50 text-blue-300' : 'border-white/20 text-white/80 hover:bg-white/20'}`} title="Filters">
               <Filter className="w-4 h-4" />
             </button>
             {showFilterPanel && (
-              <div className="absolute left-0 top-full mt-1.5 w-56 rounded-2xl z-50 shadow-2xl p-4 space-y-4" style={{ background: 'rgba(10,16,28,0.98)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(12px)' }}>
+              <div className="absolute left-0 top-full mt-1.5 w-56 rounded-2xl z-50 shadow-lg p-4 space-y-4 bg-white/10 backdrop-blur-md border border-white/20">
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Urgency</p>
                   <div className="flex flex-wrap gap-1.5">
@@ -414,23 +429,21 @@ export default function CrisisMapPage() {
           </div>
 
           {/* Refresh */}
-          <button onClick={fetchData} className="p-2 rounded-xl text-slate-400 hover:text-slate-200 transition-all flex-shrink-0" style={{ background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(8px)' }} title="Refresh">
+          <button onClick={fetchData} className="p-2 rounded-xl text-white/80 hover:bg-white/20 transition-all flex-shrink-0 bg-white/10 backdrop-blur-md border border-white/20 shadow-lg" title="Refresh">
             <MapPin className="w-4 h-4" />
           </button>
 
           {/* LIVE */}
-          <button onClick={() => setIsLive(!isLive)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${isLive ? 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)]' : 'text-slate-400 hover:text-slate-200'}`} style={!isLive ? { background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(8px)' } : {}}>
+          <button onClick={() => setIsLive(!isLive)} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 shadow-lg ${isLive ? 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)]' : 'bg-white/10 backdrop-blur-md border border-white/20 text-white/80 hover:bg-white/20'}`}>
             {isLive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-            {isLive ? 'Live' : 'Paused'}
+            <span>{isLive ? 'Live' : 'Paused'}</span>
           </button>
 
-          {usingDemo && (
-            <span className="px-2 py-1 rounded-lg text-[10px] font-semibold text-amber-400 flex-shrink-0" style={{ background: 'rgba(13,20,35,0.92)', border: '1px solid rgba(234,179,8,0.3)', backdropFilter: 'blur(8px)' }}>demo</span>
-          )}
+
         </div>
 
-        {/* -- FLOATING LEGEND (bottom-right) -- */}
-        <div className="absolute bottom-6 right-3 z-[1000] rounded-xl p-3 pointer-events-none" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)' }}>
+        {/* -- FLOATING LEGEND (bottom-left) -- */}
+        <div className="absolute bottom-6 left-3 z-[1000] rounded-xl p-3 pointer-events-none" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)' }}>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Issue Types</p>
           {[
             { label: 'Health', color: '#ef4444' },
@@ -447,38 +460,6 @@ export default function CrisisMapPage() {
           ))}
         </div>
 
-        {/* -- FLOATING AI INSIGHTS (bottom-left) -- */}
-        <div className="absolute bottom-6 left-3 z-[1000] rounded-xl overflow-hidden" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)', maxWidth: '220px' }}>
-          <button onClick={(e) => { e.stopPropagation(); setShowAIInsight(!showAIInsight); }} className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-slate-300 hover:text-white transition-colors">
-            <span className="flex items-center gap-2 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              AI Insights
-              {selectedCrisis && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />}
-            </span>
-            <ChevronUp className={`w-3.5 h-3.5 transition-transform ${showAIInsight ? '' : 'rotate-180'}`} />
-          </button>
-          {showAIInsight && (
-            <div className="px-3 pb-3 border-t border-slate-800/50">
-              {selectedCrisis ? (
-                <div className="pt-2 space-y-1.5">
-                  <p className="text-[10px] font-semibold text-indigo-400 truncate">{selectedCrisis.title}</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    {selectedCrisis.aiInsights || `${selectedCrisis.urgencyLevel.toUpperCase()} ${selectedCrisis.category} crisis � ${selectedCrisis.region}. ${selectedCrisis.affectedPopulation ? `~${selectedCrisis.affectedPopulation.toLocaleString('en-IN')} affected.` : ''}`}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 rounded-full bg-slate-800">
-                      <div className="h-1 rounded-full" style={{ width: `${selectedCrisis.priorityScore ?? 50}%`, background: (selectedCrisis.priorityScore ?? 50) >= 80 ? '#ef4444' : '#f97316' }} />
-                    </div>
-                    <span className="text-[10px] text-slate-500">{selectedCrisis.priorityScore ?? 50}/100</span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[11px] text-slate-600 pt-2">Click a marker for AI analysis</p>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* -- SLIDE-IN RIGHT PANEL (on marker click) -- */}
         <div
           className={`absolute top-0 right-0 bottom-0 z-30 transition-all duration-300 ease-in-out ${selectedCrisis ? 'w-72 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}
@@ -489,7 +470,6 @@ export default function CrisisMapPage() {
               <RightPanel
                 crisis={selectedCrisis}
                 onClose={() => setSelectedCrisis(null)}
-                onAssignVolunteer={() => setShowAssignModal(true)}
                 onDonate={handleDonate}
                 onFetchInsights={handleFetchInsights}
               />
@@ -497,16 +477,6 @@ export default function CrisisMapPage() {
           )}
         </div>
       </div>
-
-      {/* Assign modal */}
-      {showAssignModal && selectedCrisis && (
-        <AssignVolunteerModal
-          crisisId={selectedCrisis._id}
-          crisisTitle={selectedCrisis.title}
-          onAssign={handleAssignVolunteer}
-          onClose={() => setShowAssignModal(false)}
-        />
-      )}
     </DashboardLayout>
   );
 }

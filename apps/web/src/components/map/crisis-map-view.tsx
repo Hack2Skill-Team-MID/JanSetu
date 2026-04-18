@@ -93,55 +93,78 @@ export default function CrisisMapView({
     const map = mapInst.current;
     if (!map) return;
 
-    // Clear existing
-    markersRef.current.forEach((m) => map.removeLayer(m));
-    markersRef.current.clear();
+    if (!isLive) {
+      markersRef.current.forEach((m) => map.removeLayer(m));
+      markersRef.current.clear();
+      return;
+    }
 
-    if (!isLive) return;
+    const currentIds = new Set(crises.map(c => c.id || c._id));
 
+    // Remove old markers
+    markersRef.current.forEach((marker, mId) => {
+      if (!currentIds.has(mId)) {
+        map.removeLayer(marker);
+        markersRef.current.delete(mId);
+      }
+    });
+
+    // Add new markers
     crises.forEach((crisis) => {
-      if (!crisis.coordinates?.length) return;
-      const [lng, lat] = crisis.coordinates;
-      if (!lat || !lng || (lat === 0 && lng === 0)) return;
+      const crisisId = crisis.id || crisis._id || '';
+      if (markersRef.current.has(crisisId)) return;
 
-      const color     = CATEGORY_COLORS[crisis.category] || '#6366f1';
-      const urgColor  = URGENCY_COLORS[crisis.urgencyLevel] || '#6b7280';
-      const isSelected = selectedCrisis?._id === crisis._id;
+      let lat: number | undefined;
+      let lng: number | undefined;
+      
+      if (typeof crisis.location === 'object' && crisis.location !== null && 'lat' in crisis.location) {
+        lat = crisis.location.lat;
+        lng = crisis.location.lng;
+      } else if (crisis.coordinates?.length === 2) {
+        lat = crisis.coordinates[1]; // lat
+        lng = crisis.coordinates[0]; // lng
+      }
+
+      if (lat === undefined || lng === undefined || (lat === 0 && lng === 0)) return;
+
+      const crisisCategory = crisis.category || 'other';
+      const crisisUrgency = crisis.urgencyLevel || crisis.severity || 'medium';
+
+      const color     = CATEGORY_COLORS[crisisCategory] || '#6366f1';
+      const urgColor  = URGENCY_COLORS[crisisUrgency] || '#6b7280';
+      const isSelected = (selectedCrisis?.id || selectedCrisis?._id) === crisisId;
 
       const marker = L.marker([lat, lng], {
         icon: makeMarkerIcon(color, urgColor, isSelected),
         zIndexOffset: isSelected ? 1000 : 0,
       });
 
-      const el = marker.getElement?.();
-
-      marker.on('add', () => {
-        const el = marker.getElement();
-        if (!el) return;
-        el.style.transition = 'transform 0.15s ease';
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.45)';
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-        });
-      });
+      // Tooltip on hover — shows title + category with no position shift
+      const urgencyLabel = crisisUrgency.charAt(0).toUpperCase() + crisisUrgency.slice(1);
+      const categoryLabel = crisisCategory.charAt(0).toUpperCase() + crisisCategory.slice(1);
+      marker.bindTooltip(
+        `<div class="jansetu-tooltip"><strong>${crisis.title}</strong><span>${categoryLabel} &middot; ${urgencyLabel}</span></div>`,
+        { direction: 'top', offset: [0, -10], opacity: 1, className: 'jansetu-tooltip-wrap' }
+      );
 
       marker.on('click', () => onMarkerClick(crisis));
       marker.addTo(map);
-      markersRef.current.set(crisis._id, marker);
+      markersRef.current.set(crisisId, marker);
     });
   }, [crises, isLive, selectedCrisis, onMarkerClick]);
 
   /* ── Update icon when selection changes ── */
   useEffect(() => {
-    markersRef.current.forEach((marker, id) => {
-      const crisis = crises.find((c) => c._id === id);
+    markersRef.current.forEach((marker, mId) => {
+      const crisis = crises.find((c) => (c.id || c._id) === mId);
       if (!crisis) return;
-      const color    = CATEGORY_COLORS[crisis.category] || '#6366f1';
-      const urgColor = URGENCY_COLORS[crisis.urgencyLevel] || '#6b7280';
-      marker.setIcon(makeMarkerIcon(color, urgColor, selectedCrisis?._id === id));
-      marker.setZIndexOffset(selectedCrisis?._id === id ? 1000 : 0);
+      const crisisCategory = crisis.category || 'other';
+      const crisisUrgency = crisis.urgencyLevel || crisis.severity || 'medium';
+      const color    = CATEGORY_COLORS[crisisCategory] || '#6366f1';
+      const urgColor = URGENCY_COLORS[crisisUrgency] || '#6b7280';
+      const isSelected = (selectedCrisis?.id || selectedCrisis?._id) === mId;
+      marker.setIcon(makeMarkerIcon(color, urgColor, isSelected));
+      marker.setZIndexOffset(isSelected ? 1000 : 0);
     });
   }, [selectedCrisis, crises]);
 
@@ -182,6 +205,36 @@ export default function CrisisMapView({
         .leaflet-marker-icon { background: none !important; border: none !important; }
         .leaflet-container { background: #0f172a; }
         .leaflet-bottom.leaflet-right { z-index: 7 !important; }
+
+        /* Tooltip styling */
+        .jansetu-tooltip-wrap {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+        .jansetu-tooltip-wrap::before { display: none !important; }
+        .jansetu-tooltip {
+          background: rgba(10,16,28,0.92);
+          border: 1px solid rgba(99,102,241,0.4);
+          backdrop-filter: blur(8px);
+          border-radius: 8px;
+          padding: 6px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          white-space: nowrap;
+          pointer-events: none;
+        }
+        .jansetu-tooltip strong {
+          color: #e2e8f0;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .jansetu-tooltip span {
+          color: #94a3b8;
+          font-size: 10px;
+        }
       `}</style>
       <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '520px', borderRadius: 'inherit', position: 'absolute', inset: 0 }} />
     </>

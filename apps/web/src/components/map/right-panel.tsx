@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import {
-  X, AlertTriangle, Users, Building2, Heart, UserPlus,
+  X, AlertTriangle, Users, Building2, Heart,
   Sparkles, ChevronDown, ChevronUp, MapPin, TrendingUp,
 } from 'lucide-react';
 import type { Crisis } from '../../types/crisis-map.types';
@@ -11,7 +11,6 @@ import { CATEGORY_COLORS, URGENCY_COLORS } from '../../types/crisis-map.types';
 interface RightPanelProps {
   crisis: Crisis | null;
   onClose: () => void;
-  onAssignVolunteer: () => void;
   onDonate: (crisisId: string) => void;
   onFetchInsights: (crisisId: string) => Promise<string>;
 }
@@ -26,7 +25,6 @@ const URGENCY_BADGE: Record<string, { bg: string; text: string; dot: string }> =
 export default function RightPanel({
   crisis,
   onClose,
-  onAssignVolunteer,
   onDonate,
   onFetchInsights,
 }: RightPanelProps) {
@@ -37,15 +35,20 @@ export default function RightPanel({
 
   const handleInsight = async () => {
     if (!crisis) return;
-    if (insightFetched === crisis._id && insight) {
+    
+    // Safely extract the ID since _id is optional on the Crisis type
+    const crisisId = crisis._id ?? crisis.id ?? '';
+    if (!crisisId) return;
+
+    if (insightFetched === crisisId && insight) {
       setShowInsight(!showInsight);
       return;
     }
     setLoading(true);
     try {
-      const result = await onFetchInsights(crisis._id);
+      const result = await onFetchInsights(crisisId);
       setInsight(result);
-      setFetched(crisis._id);
+      setFetched(crisisId);
       setShowInsight(true);
     } finally {
       setLoading(false);
@@ -71,7 +74,7 @@ export default function RightPanel({
   }
 
   const catColor  = CATEGORY_COLORS[crisis.category] || '#6366f1';
-  const urgBadge  = URGENCY_BADGE[crisis.urgencyLevel] || URGENCY_BADGE.low;
+  const urgBadge  = URGENCY_BADGE[crisis.urgencyLevel ?? 'medium'] || URGENCY_BADGE.low;
   const ngoName   = typeof crisis.ngoId === 'object' ? crisis.ngoId?.name : 'Unknown NGO';
   const priorityPct = Math.min(crisis.priorityScore || 50, 100);
 
@@ -172,7 +175,9 @@ export default function RightPanel({
           </div>
           <div className="min-w-0">
             <p className="text-[9px] text-slate-500 uppercase tracking-widest">Location</p>
-            <p className="text-xs font-medium text-slate-300 truncate">{crisis.location}</p>
+            <p className="text-xs font-medium text-slate-300 truncate">
+              {typeof crisis.location === 'object' ? `${crisis.location.city}` : crisis.location}
+            </p>
             <p className="text-[10px] text-slate-500">{crisis.region}</p>
           </div>
         </div>
@@ -205,17 +210,9 @@ export default function RightPanel({
         </div>
       </div>
 
-      {/* ── Action buttons ── */}
-      <div className="flex-shrink-0 px-4 pb-4 pt-3 border-t border-slate-800/60 space-y-2">
+      <div className="flex-shrink-0 px-4 pb-4 pt-3 border-t border-slate-800/60">
         <button
-          onClick={onAssignVolunteer}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs font-bold transition-all shadow-[0_0_16px_rgba(99,102,241,0.25)]"
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          Assign Volunteer
-        </button>
-        <button
-          onClick={() => onDonate(crisis._id)}
+          onClick={() => onDonate(crisis._id ?? crisis.id ?? '')}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 active:scale-[0.98] border border-rose-500/50 text-rose-400 hover:text-rose-300 text-xs font-bold transition-all"
         >
           <Heart className="w-3.5 h-3.5" />

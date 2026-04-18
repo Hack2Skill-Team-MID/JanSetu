@@ -8,21 +8,26 @@ export interface CrisisNGO {
 }
 
 export interface Crisis {
-  _id: string;
+  _id?: string;
+  id?: string;
   title: string;
-  description: string;
+  description?: string;
   category: CrisisCategory | string;
-  urgencyLevel: UrgencyLevel;
-  priorityScore: number;
-  status: string;
-  location: string;
-  region: string;
-  coordinates: [number, number]; // [lng, lat]
+  urgencyLevel?: UrgencyLevel;
+  severity?: string; // added for demo compatibility
+  priorityScore?: number;
+  status?: string;
+  location: string | { lat: number; lng: number; city: string; region: string };
+  region?: string;
+  coordinates?: [number, number]; // [lng, lat]
   affectedPopulation?: number;
-  ngoId?: CrisisNGO | string;
+  peopleAffected?: number; // added for demo compatibility
+  ngoId?: CrisisNGO | string | null;
   aiInsights?: string;
   reportedAt?: string;
   createdAt?: string;
+  resources?: any[];
+  volunteers?: any[];
 }
 
 export interface CityRegion {
