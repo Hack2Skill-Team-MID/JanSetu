@@ -14,6 +14,29 @@ interface CrisisMapViewProps {
   selectedCrisis: Crisis | null;
 }
 
+/* ── Build a styled div-icon that matches the reference image ── */
+function makeMarkerIcon(color: string, urgencyColor: string, isSelected: boolean, isGlobal = false): L.DivIcon {
+  const size = isSelected ? 22 : isGlobal ? 10 : 16;
+  const glow = isSelected
+    ? `0 0 0 4px ${color}33, 0 0 20px ${color}88`
+    : `0 0 8px ${color}99`;
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:${size}px;
+      height:${size}px;
+      border-radius:50%;
+      background:${color};
+      box-shadow:${glow};
+      border:${isSelected ? `2.5px solid white` : '0'};
+      transition:all 0.2s ease;
+      cursor:pointer;
+    "></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 export default function CrisisMapView({
   crises,
   selectedCity,
@@ -21,31 +44,36 @@ export default function CrisisMapView({
   onMarkerClick,
   selectedCrisis,
 }: CrisisMapViewProps) {
-  const mapRef    = useRef<HTMLDivElement>(null);
-  const mapInst   = useRef<L.Map | null>(null);
-  const markers   = useRef<Map<string, L.CircleMarker>>(new Map());
+  const mapRef     = useRef<HTMLDivElement>(null);
+  const mapInst    = useRef<L.Map | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
-  /* ── Init map once ── */
+  /* ── Init map ── */
   useEffect(() => {
     if (!mapRef.current || mapInst.current) return;
 
     const map = L.map(mapRef.current, {
       center: [22.5, 78.9],
       zoom: 5,
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: false,
     });
 
+    // Custom dark tile — matches reference image exactly
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
+      subdomains: 'abcd',
     }).addTo(map);
+
+    // Custom zoom control bottom-right
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     mapInst.current = map;
 
     return () => {
       map.remove();
       mapInst.current = null;
-      markers.current.clear();
+      markersRef.current.clear();
     };
   }, []);
 
@@ -54,106 +82,98 @@ export default function CrisisMapView({
     const map = mapInst.current;
     if (!map) return;
     if (selectedCity) {
-      map.flyTo(selectedCity.coordinates, selectedCity.zoom, { duration: 1.2 });
+      map.flyTo(selectedCity.coordinates, selectedCity.zoom, { duration: 1.0, easeLinearity: 0.3 });
     } else {
-      map.flyTo([22.5, 78.9], 5, { duration: 1.2 });
+      map.flyTo([22.5, 78.9], 5, { duration: 1.0 });
     }
   }, [selectedCity]);
 
-  /* ── Re-render markers when crises / isLive changes ── */
+  /* ── Render markers ── */
   useEffect(() => {
     const map = mapInst.current;
     if (!map) return;
 
-    // Remove all existing crisis markers
-    markers.current.forEach((m) => map.removeLayer(m));
-    markers.current.clear();
+    // Clear existing
+    markersRef.current.forEach((m) => map.removeLayer(m));
+    markersRef.current.clear();
 
-    if (!isLive) return; // Live OFF → show nothing
+    if (!isLive) return;
 
     crises.forEach((crisis) => {
       if (!crisis.coordinates?.length) return;
       const [lng, lat] = crisis.coordinates;
-      if (!lat || !lng) return;
+      if (!lat || !lng || (lat === 0 && lng === 0)) return;
 
+      const color     = CATEGORY_COLORS[crisis.category] || '#6366f1';
+      const urgColor  = URGENCY_COLORS[crisis.urgencyLevel] || '#6b7280';
+      const isSelected = selectedCrisis?._id === crisis._id;
+
+      const marker = L.marker([lat, lng], {
+        icon: makeMarkerIcon(color, urgColor, isSelected),
+        zIndexOffset: isSelected ? 1000 : 0,
+      });
+
+      const el = marker.getElement?.();
+
+      marker.on('add', () => {
+        const el = marker.getElement();
+        if (!el) return;
+        el.style.transition = 'transform 0.15s ease';
+        el.addEventListener('mouseenter', () => {
+          el.style.transform = 'scale(1.45)';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = 'scale(1)';
+        });
+      });
+
+      marker.on('click', () => onMarkerClick(crisis));
+      marker.addTo(map);
+      markersRef.current.set(crisis._id, marker);
+    });
+  }, [crises, isLive, selectedCrisis, onMarkerClick]);
+
+  /* ── Update icon when selection changes ── */
+  useEffect(() => {
+    markersRef.current.forEach((marker, id) => {
+      const crisis = crises.find((c) => c._id === id);
+      if (!crisis) return;
       const color    = CATEGORY_COLORS[crisis.category] || '#6366f1';
       const urgColor = URGENCY_COLORS[crisis.urgencyLevel] || '#6b7280';
-      const radius   = crisis.urgencyLevel === 'critical' ? 12 : crisis.urgencyLevel === 'high' ? 9 : 7;
-
-      const circle = L.circleMarker([lat, lng], {
-        radius,
-        fillColor: color,
-        color: urgColor,
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.75,
-      });
-
-      // Pulse ring for critical
-      if (crisis.urgencyLevel === 'critical') {
-        L.circleMarker([lat, lng], {
-          radius: radius + 6,
-          fillColor: color,
-          color: color,
-          weight: 1,
-          opacity: 0.3,
-          fillOpacity: 0.15,
-          interactive: false,
-        }).addTo(map);
-      }
-
-      circle.on('click', () => onMarkerClick(crisis));
-      circle.on('mouseover', () => {
-        circle.setStyle({ radius: radius + 3, fillOpacity: 1 });
-      });
-      circle.on('mouseout', () => {
-        circle.setStyle({ radius, fillOpacity: 0.75 });
-      });
-
-      circle.bindTooltip(
-        `<div style="font-size:12px;font-weight:600;color:#e2e8f0">${crisis.title}</div>
-         <div style="font-size:10px;color:${urgColor};font-weight:700;text-transform:uppercase">${crisis.urgencyLevel}</div>`,
-        { className: 'crisis-tooltip', sticky: true }
-      );
-
-      circle.addTo(map);
-      markers.current.set(crisis._id, circle);
-    });
-  }, [crises, isLive, onMarkerClick]);
-
-  /* ── Highlight selected crisis ── */
-  useEffect(() => {
-    markers.current.forEach((circle, id) => {
-      if (selectedCrisis && id === selectedCrisis._id) {
-        circle.setStyle({ weight: 3, opacity: 1, fillOpacity: 1, radius: 14 });
-      } else {
-        const crisis = crises.find((c) => c._id === id);
-        if (!crisis) return;
-        const r = crisis.urgencyLevel === 'critical' ? 12 : crisis.urgencyLevel === 'high' ? 9 : 7;
-        circle.setStyle({ weight: 2, opacity: 1, fillOpacity: 0.75, radius: r });
-      }
+      marker.setIcon(makeMarkerIcon(color, urgColor, selectedCrisis?._id === id));
+      marker.setZIndexOffset(selectedCrisis?._id === id ? 1000 : 0);
     });
   }, [selectedCrisis, crises]);
 
   return (
     <>
       <style>{`
-        .crisis-tooltip {
-          background: #1e293b !important;
-          border: 1px solid #334155 !important;
-          border-radius: 8px !important;
-          padding: 6px 10px !important;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.6) !important;
+          border-radius: 12px !important;
+          overflow: hidden;
+          margin: 0 12px 12px 0 !important;
         }
-        .crisis-tooltip::before { display: none !important; }
         .leaflet-control-zoom a {
-          background: #1e293b !important;
-          color: #e2e8f0 !important;
-          border-color: #334155 !important;
+          background: rgba(15,23,42,0.95) !important;
+          color: #94a3b8 !important;
+          border: none !important;
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          border-bottom: 1px solid rgba(51,65,85,0.5) !important;
         }
-        .leaflet-control-zoom a:hover { background: #334155 !important; }
+        .leaflet-control-zoom a:last-child { border-bottom: none !important; }
+        .leaflet-control-zoom a:hover {
+          background: rgba(30,41,59,0.98) !important;
+          color: #e2e8f0 !important;
+        }
+        .leaflet-marker-icon { background: none !important; border: none !important; }
+        .leaflet-container { background: #0f172a; }
       `}</style>
-      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '480px' }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '520px', borderRadius: 'inherit' }} />
     </>
   );
 }
