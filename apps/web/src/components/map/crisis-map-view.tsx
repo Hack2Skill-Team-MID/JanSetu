@@ -148,12 +148,21 @@ export default function CrisisMapView({
   return (
     <>
       <style>{`
+        /* ── Lower Leaflet's internal z-indexes so React overlays can appear above ── */
+        .leaflet-pane         { z-index: 1 !important; }
+        .leaflet-tile-pane    { z-index: 1 !important; }
+        .leaflet-overlay-pane { z-index: 2 !important; }
+        .leaflet-shadow-pane  { z-index: 3 !important; }
+        .leaflet-marker-pane  { z-index: 4 !important; }
+        .leaflet-tooltip-pane { z-index: 5 !important; }
+        .leaflet-popup-pane   { z-index: 6 !important; }
         .leaflet-control-zoom {
           border: none !important;
           box-shadow: 0 4px 24px rgba(0,0,0,0.6) !important;
           border-radius: 12px !important;
           overflow: hidden;
-          margin: 0 12px 12px 0 !important;
+          margin: 0 12px 50px 0 !important;
+          z-index: 7 !important;
         }
         .leaflet-control-zoom a {
           background: rgba(15,23,42,0.95) !important;
@@ -172,8 +181,9 @@ export default function CrisisMapView({
         }
         .leaflet-marker-icon { background: none !important; border: none !important; }
         .leaflet-container { background: #0f172a; }
+        .leaflet-bottom.leaflet-right { z-index: 7 !important; }
       `}</style>
-      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '520px', borderRadius: 'inherit' }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '520px', borderRadius: 'inherit', position: 'absolute', inset: 0 }} />
     </>
   );
 }

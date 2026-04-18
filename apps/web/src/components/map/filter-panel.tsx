@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { SlidersHorizontal, X } from 'lucide-react';
 import type { CrisisFilters, CrisisNGO } from '../../types/crisis-map.types';

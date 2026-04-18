@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
@@ -309,7 +309,7 @@ export default function CrisisMapPage() {
 
         {/* LIVE-OFF overlay */}
         {!isLive && !isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'rgba(5,8,15,0.72)', backdropFilter: 'blur(3px)' }}>
+          <div className="absolute inset-0 z-[950] flex items-center justify-center" style={{ background: 'rgba(5,8,15,0.72)', backdropFilter: 'blur(3px)' }}>
             <div className="text-center space-y-3">
               <AlertTriangle className="w-10 h-10 text-slate-600 mx-auto" />
               <p className="text-sm font-semibold text-slate-400">Map paused</p>
@@ -332,7 +332,7 @@ export default function CrisisMapPage() {
         )}
 
         {/* -- FLOATING TOP TOOLBAR -- */}
-        <div className="absolute top-3 left-3 right-3 z-20 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute top-3 left-3 right-3 z-[1000] flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {/* City picker */}
           <div className="relative flex-shrink-0">
             <button
@@ -430,7 +430,7 @@ export default function CrisisMapPage() {
         </div>
 
         {/* -- FLOATING LEGEND (bottom-right) -- */}
-        <div className="absolute bottom-6 right-3 z-20 rounded-xl p-3 pointer-events-none" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)' }}>
+        <div className="absolute bottom-6 right-3 z-[1000] rounded-xl p-3 pointer-events-none" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)' }}>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Issue Types</p>
           {[
             { label: 'Health', color: '#ef4444' },
@@ -448,7 +448,7 @@ export default function CrisisMapPage() {
         </div>
 
         {/* -- FLOATING AI INSIGHTS (bottom-left) -- */}
-        <div className="absolute bottom-6 left-3 z-20 rounded-xl overflow-hidden" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)', maxWidth: '220px' }}>
+        <div className="absolute bottom-6 left-3 z-[1000] rounded-xl overflow-hidden" style={{ background: 'rgba(10,16,28,0.88)', border: '1px solid rgba(51,65,85,0.5)', backdropFilter: 'blur(8px)', maxWidth: '220px' }}>
           <button onClick={(e) => { e.stopPropagation(); setShowAIInsight(!showAIInsight); }} className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-slate-300 hover:text-white transition-colors">
             <span className="flex items-center gap-2 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
@@ -463,7 +463,7 @@ export default function CrisisMapPage() {
                 <div className="pt-2 space-y-1.5">
                   <p className="text-[10px] font-semibold text-indigo-400 truncate">{selectedCrisis.title}</p>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    {selectedCrisis.aiInsights || `${selectedCrisis.urgencyLevel.toUpperCase()} ${selectedCrisis.category} crisis — ${selectedCrisis.region}. ${selectedCrisis.affectedPopulation ? `~${selectedCrisis.affectedPopulation.toLocaleString('en-IN')} affected.` : ''}`}
+                    {selectedCrisis.aiInsights || `${selectedCrisis.urgencyLevel.toUpperCase()} ${selectedCrisis.category} crisis ï¿½ ${selectedCrisis.region}. ${selectedCrisis.affectedPopulation ? `~${selectedCrisis.affectedPopulation.toLocaleString('en-IN')} affected.` : ''}`}
                   </p>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1 rounded-full bg-slate-800">
