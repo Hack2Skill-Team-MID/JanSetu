@@ -28,6 +28,7 @@ interface Task {
   volunteersNeeded: number;
   volunteersAssigned: number;
   priority?: Priority;
+  volunteers?: { id: string; name: string }[];
 }
 
 // defined inside component so labels can use t()
@@ -58,7 +59,7 @@ const DEMO_TASKS: Task[] = [
   { id: 't9', title: 'Conduct environmental awareness drive in schools', description: 'Deliver 2-hour sessions on waste management, water conservation, and tree planting in 12 tribal schools.', status: 'completed', priority: 'low', requiredSkills: ['Teaching', 'Environment'], location: 'Bandipur, Karnataka', deadline: new Date(Date.now() - 12 * 24 * 3600000).toISOString(), volunteersNeeded: 3, volunteersAssigned: 3 },
 ];
 
-function TaskCard({ task, onMove }: { task: Task; onMove: (id: string, status: Status) => void }) {
+function TaskCard({ task, onMove, onStartTask }: { task: Task; onMove: (id: string, status: Status) => void; onStartTask: (t: Task) => void }) {
   const skill = task.requiredSkills?.[0];
   const deadline = task.deadline ? new Date(task.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
@@ -86,11 +87,19 @@ function TaskCard({ task, onMove }: { task: Task; onMove: (id: string, status: S
             <CalendarDays className="h-3 w-3 flex-shrink-0" />Due {deadline}
           </div>
         )}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <Users className="h-3 w-3 flex-shrink-0" />
           <span className={task.volunteersAssigned >= task.volunteersNeeded ? 'text-emerald-400' : ''}>
             {task.volunteersAssigned}/{task.volunteersNeeded} volunteers
           </span>
+          {task.status === 'in_progress' && (
+            <button
+              onClick={() => onStartTask(task)}
+              className="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-2 transition-colors"
+            >
+              Manage
+            </button>
+          )}
         </div>
       </div>
       {skill && (
@@ -98,7 +107,7 @@ function TaskCard({ task, onMove }: { task: Task; onMove: (id: string, status: S
       )}
       <div className="flex gap-1.5 pt-1">
         {task.status !== 'in_progress' && task.status !== 'completed' && (
-          <Button size="sm" variant="outline" className="h-7 text-xs flex-1 border-slate-700 hover:border-indigo-500 hover:text-indigo-400" onClick={() => onMove(task.id, 'in_progress')}>
+          <Button size="sm" variant="outline" className="h-7 text-xs flex-1 border-slate-700 hover:border-indigo-500 hover:text-indigo-400" onClick={() => onStartTask(task)}>
             Start
           </Button>
         )}
@@ -126,6 +135,11 @@ export default function TasksPage() {
   const [submitting, setSubmitting] = useState(false);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
 
+  // Manage Volunteers State
+  const [manageTask, setManageTask] = useState<Task | null>(null);
+  const [tempVols, setTempVols] = useState<{ id: string; name: string }[]>([]);
+  const [volInput, setVolInput] = useState({ id: '', name: '' });
+
   const STATUS_COLUMNS = [
     { key: 'open' as Status, label: t('tasks.open'), icon: CircleDot, color: 'text-slate-400', bg: 'bg-slate-500/10' },
     { key: 'in_progress' as Status, label: t('tasks.inProgress'), icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -145,6 +159,46 @@ export default function TasksPage() {
   const handleMove = async (id: string, status: Status) => {
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
     try { await api.patch(`/tasks/${id}`, { status }); } catch { /* optimistic, no revert for demo */ }
+  };
+
+  const handleOpenManageTask = (task: Task) => {
+    setManageTask(task);
+    setTempVols(task.volunteers || []);
+    setVolInput({ id: '', name: '' });
+  };
+
+  const handleAddVol = () => {
+    if (!volInput.id.trim() || !volInput.name.trim()) return;
+    setTempVols((p) => [...p, { id: volInput.id.trim(), name: volInput.name.trim() }]);
+    setVolInput({ id: '', name: '' });
+  };
+
+  const handleRemoveVol = (id: string) => {
+    setTempVols((p) => p.filter((v) => v.id !== id));
+  };
+
+  const handleConfirmManageTask = async () => {
+    if (!manageTask) return;
+    setSubmitting(true);
+    const newStatus = manageTask.status === 'open' ? 'in_progress' : manageTask.status;
+    const updatedTask = {
+      ...manageTask,
+      status: newStatus,
+      volunteers: tempVols,
+      volunteersAssigned: tempVols.length,
+    };
+    setTasks((prev) => prev.map((t) => t.id === manageTask.id ? updatedTask : t));
+
+    try {
+      await api.patch(`/tasks/${manageTask.id}`, {
+        status: newStatus,
+        volunteers: tempVols,
+        volunteersAssigned: tempVols.length,
+      });
+    } catch { /* optimistic */ }
+
+    setSubmitting(false);
+    setManageTask(null);
   };
 
   const handleCreate = async () => {
@@ -261,7 +315,7 @@ export default function TasksPage() {
                   </div>
                   <div className="space-y-3 min-h-[200px]">
                     {colTasks.map((task) => (
-                      <TaskCard key={task.id} task={task} onMove={handleMove} />
+                      <TaskCard key={task.id} task={task} onMove={handleMove} onStartTask={handleOpenManageTask} />
                     ))}
                     {colTasks.length === 0 && (
                       <div className="flex items-center justify-center h-32 rounded-xl border-2 border-dashed border-slate-800">
@@ -326,6 +380,82 @@ export default function TasksPage() {
             <Button disabled={!newTask.title || submitting} onClick={handleCreate} className="gap-2 bg-indigo-600 hover:bg-indigo-500">
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
               Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Volunteers Dialog */}
+      <Dialog open={!!manageTask} onOpenChange={(open) => !open && setManageTask(null)}>
+        <DialogContent className="max-w-md bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-100">
+              <Users className="h-4 w-4" /> 
+              {manageTask?.status === 'open' ? 'Start Campaign & Manage Volunteers' : 'Manage Volunteers'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-slate-400">
+              Task: <span className="font-medium text-slate-300">{manageTask?.title}</span>
+            </p>
+            
+            {/* Add Volunteer */}
+            <div className="glass-card rounded-xl border border-slate-800 p-3 space-y-3">
+              <h4 className="text-xs font-semibold text-slate-300">Add New Volunteer</h4>
+              <div className="flex gap-2">
+                <Input placeholder="Vol. ID (e.g. V-001)" value={volInput.id} 
+                  onChange={(e) => setVolInput(p => ({ ...p, id: e.target.value }))}
+                  className="bg-slate-800 border-slate-700 text-slate-200 text-sm h-9 flex-1" />
+                <Input placeholder="Name" value={volInput.name} 
+                  onChange={(e) => setVolInput(p => ({ ...p, name: e.target.value }))}
+                  className="bg-slate-800 border-slate-700 text-slate-200 text-sm h-9 flex-1" />
+                <Button size="sm" onClick={handleAddVol} disabled={!volInput.id || !volInput.name}
+                  className="bg-indigo-600 hover:bg-indigo-500 h-9">
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {/* List Volunteers */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="text-xs font-semibold text-slate-300">Assigned Volunteers</h4>
+                <span className="text-[10px] text-slate-500">
+                  {tempVols.length} / {manageTask?.volunteersNeeded} needed
+                </span>
+              </div>
+              
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                {tempVols.length === 0 ? (
+                  <div className="text-xs text-slate-500 text-center py-4 border border-dashed border-slate-700 rounded-lg">
+                    No volunteers assigned yet.
+                  </div>
+                ) : (
+                  tempVols.map((v) => (
+                    <div key={v.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-700">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold">
+                          {v.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium text-slate-200">{v.name}</span>
+                          <span className="text-[10px] text-slate-500">{v.id}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => handleRemoveVol(v.id)} className="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-colors">
+                        Remove
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManageTask(null)} className="border-slate-700 text-slate-300">Cancel</Button>
+            <Button disabled={submitting} onClick={handleConfirmManageTask} className="gap-2 bg-indigo-600 hover:bg-indigo-500">
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {manageTask?.status === 'open' ? 'Start Task' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

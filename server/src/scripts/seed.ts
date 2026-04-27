@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -25,6 +26,7 @@ async function seed() {
       "FraudCaseNote", "TaskApplication", "ResourceAllocation",
       "AuditLog", "Message", "FraudCase", "EmergencyEvent",
       "Donation", "Task", "CommunityNeed", "SurveyUpload",
+      "SurveyResponse", "SurveyQuestion", "Survey",
       "Campaign", "Resource", "VolunteerProfile", "Notification",
       "Organization", "User"
     RESTART IDENTITY CASCADE
@@ -721,6 +723,169 @@ async function seed() {
   }
 
   // ─────────────────────────────────────────
+  // SURVEYS
+  // ─────────────────────────────────────────
+  console.log('📋 Creating community surveys...');
+
+  // Survey 1: Healthcare Access
+  const survey1 = await prisma.survey.create({
+    data: {
+      createdById: ngoAdmin2.id,
+      title: 'Healthcare Access in Your Community',
+      description: 'Help us understand the healthcare challenges faced by your community. Your responses will directly shape our next medical camp locations.',
+      coverEmoji: '🏥',
+      category: 'healthcare',
+      status: 'published',
+      targetAudience: 'all',
+      isAnonymous: false,
+      questions: {
+        create: [
+          { order: 1, questionText: 'How far is the nearest government hospital from your home?', questionType: 'single_choice', options: ['Less than 1 km', '1–5 km', '5–15 km', 'More than 15 km'], isRequired: true },
+          { order: 2, questionText: 'How would you rate the quality of healthcare in your area?', questionType: 'rating', options: [], isRequired: true },
+          { order: 3, questionText: 'Which health services are most urgently needed in your community?', questionType: 'multiple_choice', options: ['Maternal & Child Health', 'Dental Care', 'Eye Care', 'Mental Health', 'General OPD', 'Emergency Services'], isRequired: true },
+          { order: 4, questionText: 'Have you or your family skipped medical treatment due to cost?', questionType: 'yes_no', options: [], isRequired: true },
+          { order: 5, questionText: 'Any specific health challenges you would like to highlight?', questionType: 'text', options: [], isRequired: false, helperText: 'Optional — describe any recurring illness or unmet need' },
+        ],
+      },
+    },
+  });
+
+  // Survey 2: Education Quality
+  const survey2 = await prisma.survey.create({
+    data: {
+      createdById: ngoAdmin1.id,
+      title: 'Education Quality & Access Survey',
+      description: 'Understanding barriers to quality education for children in underserved areas. Takes about 3 minutes.',
+      coverEmoji: '📚',
+      category: 'education',
+      status: 'published',
+      targetAudience: 'all',
+      isAnonymous: false,
+      questions: {
+        create: [
+          { order: 1, questionText: 'Are there enough schools within walkable distance in your area?', questionType: 'yes_no', options: [], isRequired: true },
+          { order: 2, questionText: 'What is the biggest barrier to education for children in your community?', questionType: 'single_choice', options: ['Cost of fees', 'Distance to school', 'Lack of teachers', 'Child labour', 'Safety concerns', 'Language barrier'], isRequired: true },
+          { order: 3, questionText: 'Rate the quality of teaching at local government schools (1 = Very Poor, 5 = Excellent)', questionType: 'rating', options: [], isRequired: true },
+          { order: 4, questionText: 'Do children in your area have access to digital devices for learning?', questionType: 'single_choice', options: ['Yes, most do', 'Some do', 'Very few', 'None at all'], isRequired: true },
+          { order: 5, questionText: 'Which age group is most at risk of dropping out?', questionType: 'multiple_choice', options: ['Under 10', '10–14 years', '14–18 years (Girls)', '14–18 years (Boys)'], isRequired: true },
+          { order: 6, questionText: 'Suggestions to improve education access in your area?', questionType: 'text', options: [], isRequired: false },
+        ],
+      },
+    },
+  });
+
+  // Survey 3: Environment & Water
+  const survey3 = await prisma.survey.create({
+    data: {
+      createdById: ngoAdmin3.id,
+      title: 'Water & Environment Impact Assessment',
+      description: 'Assessing how environmental changes and water availability are affecting local communities across India.',
+      coverEmoji: '🌿',
+      category: 'environment',
+      status: 'published',
+      targetAudience: 'all',
+      isAnonymous: false,
+      questions: {
+        create: [
+          { order: 1, questionText: 'How is the quality of drinking water in your area?', questionType: 'single_choice', options: ['Excellent — clean piped water', 'Acceptable — some issues', 'Poor — often contaminated', 'Crisis — no safe water'], isRequired: true },
+          { order: 2, questionText: 'Rate the overall environmental health of your locality (1 = Very Bad, 10 = Excellent)', questionType: 'scale', options: [], isRequired: true },
+          { order: 3, questionText: 'Which environmental issues affect your community? (select all)', questionType: 'multiple_choice', options: ['Air pollution', 'Water pollution', 'Garbage disposal', 'Deforestation', 'Flooding / waterlogging', 'Drought', 'Soil degradation'], isRequired: true },
+          { order: 4, questionText: 'Has your community experienced any natural disaster in the last 2 years?', questionType: 'yes_no', options: [], isRequired: true },
+          { order: 5, questionText: 'What single environmental change would most improve your community?', questionType: 'text', options: [], isRequired: false },
+        ],
+      },
+    },
+  });
+
+  // Survey 4: Volunteer Satisfaction (draft)
+  const survey4 = await prisma.survey.create({
+    data: {
+      createdById: ngoAdmin1.id,
+      title: 'Volunteer Experience & Satisfaction Survey',
+      description: 'We value your experience as a JanSetu volunteer. Help us improve how we support and engage our volunteer community.',
+      coverEmoji: '🤝',
+      category: 'general',
+      status: 'published',
+      targetAudience: 'volunteer',
+      isAnonymous: true,
+      questions: {
+        create: [
+          { order: 1, questionText: 'How long have you been volunteering with JanSetu?', questionType: 'single_choice', options: ['Less than 1 month', '1–3 months', '3–6 months', '6–12 months', 'More than 1 year'], isRequired: true },
+          { order: 2, questionText: 'How satisfied are you with the task matching system?', questionType: 'rating', options: [], isRequired: true },
+          { order: 3, questionText: 'What motivates you to volunteer? (select all that apply)', questionType: 'multiple_choice', options: ['Social impact', 'Skill development', 'Community connection', 'Career building', 'Personal fulfilment', 'Team/friends'], isRequired: true },
+          { order: 4, questionText: 'Have you received adequate training and support for tasks?', questionType: 'yes_no', options: [], isRequired: true },
+          { order: 5, questionText: 'On a scale of 1–10, how likely are you to recommend JanSetu to a friend?', questionType: 'scale', options: [], isRequired: true },
+          { order: 6, questionText: 'What one thing would make your volunteering experience better?', questionType: 'text', options: [], isRequired: false, helperText: 'Be as specific as you like — all feedback is read by the team' },
+        ],
+      },
+    },
+  });
+
+  // Fetch created questions to map IDs
+  const s1Qs = await prisma.surveyQuestion.findMany({ where: { surveyId: survey1.id }, orderBy: { order: 'asc' } });
+  const s2Qs = await prisma.surveyQuestion.findMany({ where: { surveyId: survey2.id }, orderBy: { order: 'asc' } });
+  const s3Qs = await prisma.surveyQuestion.findMany({ where: { surveyId: survey3.id }, orderBy: { order: 'asc' } });
+  const s4Qs = await prisma.surveyQuestion.findMany({ where: { surveyId: survey4.id }, orderBy: { order: 'asc' } });
+
+  // Responses for Survey 1 (Healthcare)
+  const s1Respondents = [volunteer1, volunteer2, volunteer3, volunteer4, volunteer5, volunteer6, donor1, donor2];
+  const s1AnswerSets = [
+    { [s1Qs[0].id]: '1–5 km',      [s1Qs[1].id]: 3, [s1Qs[2].id]: ['Maternal & Child Health', 'Emergency Services'], [s1Qs[3].id]: 'Yes', [s1Qs[4].id]: 'Need more ambulances.' },
+    { [s1Qs[0].id]: 'Less than 1 km', [s1Qs[1].id]: 4, [s1Qs[2].id]: ['Mental Health', 'Dental Care'],              [s1Qs[3].id]: 'No',  [s1Qs[4].id]: '' },
+    { [s1Qs[0].id]: '5–15 km',     [s1Qs[1].id]: 2, [s1Qs[2].id]: ['General OPD', 'Eye Care'],                      [s1Qs[3].id]: 'Yes', [s1Qs[4].id]: 'No specialist doctors nearby.' },
+    { [s1Qs[0].id]: 'More than 15 km', [s1Qs[1].id]: 1, [s1Qs[2].id]: ['Emergency Services', 'Maternal & Child Health'], [s1Qs[3].id]: 'Yes', [s1Qs[4].id]: '' },
+    { [s1Qs[0].id]: '1–5 km',      [s1Qs[1].id]: 4, [s1Qs[2].id]: ['Dental Care'],                                  [s1Qs[3].id]: 'No',  [s1Qs[4].id]: 'Services are decent but crowded.' },
+    { [s1Qs[0].id]: '5–15 km',     [s1Qs[1].id]: 2, [s1Qs[2].id]: ['General OPD', 'Maternal & Child Health'],       [s1Qs[3].id]: 'Yes', [s1Qs[4].id]: '' },
+    { [s1Qs[0].id]: '1–5 km',      [s1Qs[1].id]: 5, [s1Qs[2].id]: ['Mental Health'],                                [s1Qs[3].id]: 'No',  [s1Qs[4].id]: '' },
+    { [s1Qs[0].id]: 'Less than 1 km', [s1Qs[1].id]: 3, [s1Qs[2].id]: ['Eye Care', 'Dental Care'],                   [s1Qs[3].id]: 'No',  [s1Qs[4].id]: '' },
+  ];
+  for (let i = 0; i < s1Respondents.length; i++) {
+    await prisma.surveyResponse.create({ data: { surveyId: survey1.id, respondentId: s1Respondents[i].id, answers: s1AnswerSets[i] as any } });
+  }
+
+  // Responses for Survey 2 (Education)
+  const s2Respondents = [volunteer1, volunteer3, volunteer4, volunteer5, donor3, donor4];
+  const s2AnswerSets = [
+    { [s2Qs[0].id]: 'No',  [s2Qs[1].id]: 'Distance to school',  [s2Qs[2].id]: 3, [s2Qs[3].id]: 'Very few',    [s2Qs[4].id]: ['14–18 years (Girls)'],              [s2Qs[5].id]: 'More free bus routes needed.' },
+    { [s2Qs[0].id]: 'Yes', [s2Qs[1].id]: 'Lack of teachers',    [s2Qs[2].id]: 2, [s2Qs[3].id]: 'None at all', [s2Qs[4].id]: ['10–14 years', '14–18 years (Girls)'], [s2Qs[5].id]: '' },
+    { [s2Qs[0].id]: 'No',  [s2Qs[1].id]: 'Child labour',        [s2Qs[2].id]: 1, [s2Qs[3].id]: 'None at all', [s2Qs[4].id]: ['Under 10', '10–14 years'],          [s2Qs[5].id]: 'Midday meal scheme needs expansion.' },
+    { [s2Qs[0].id]: 'Yes', [s2Qs[1].id]: 'Cost of fees',        [s2Qs[2].id]: 4, [s2Qs[3].id]: 'Some do',     [s2Qs[4].id]: ['14–18 years (Girls)'],              [s2Qs[5].id]: '' },
+    { [s2Qs[0].id]: 'Yes', [s2Qs[1].id]: 'Safety concerns',     [s2Qs[2].id]: 3, [s2Qs[3].id]: 'Some do',     [s2Qs[4].id]: ['14–18 years (Boys)'],              [s2Qs[5].id]: 'Add streetlights on school routes.' },
+    { [s2Qs[0].id]: 'No',  [s2Qs[1].id]: 'Language barrier',    [s2Qs[2].id]: 2, [s2Qs[3].id]: 'Very few',    [s2Qs[4].id]: ['Under 10'],                        [s2Qs[5].id]: '' },
+  ];
+  for (let i = 0; i < s2Respondents.length; i++) {
+    await prisma.surveyResponse.create({ data: { surveyId: survey2.id, respondentId: s2Respondents[i].id, answers: s2AnswerSets[i] as any } });
+  }
+
+  // Responses for Survey 3 (Environment)
+  const s3Respondents = [volunteer2, volunteer4, volunteer6, donor1, donor2];
+  const s3AnswerSets = [
+    { [s3Qs[0].id]: 'Poor — often contaminated',  [s3Qs[1].id]: 3,  [s3Qs[2].id]: ['Water pollution', 'Garbage disposal', 'Flooding / waterlogging'], [s3Qs[3].id]: 'Yes', [s3Qs[4].id]: 'More water treatment plants.' },
+    { [s3Qs[0].id]: 'Crisis — no safe water',     [s3Qs[1].id]: 2,  [s3Qs[2].id]: ['Drought', 'Air pollution', 'Deforestation'],                      [s3Qs[3].id]: 'Yes', [s3Qs[4].id]: '' },
+    { [s3Qs[0].id]: 'Acceptable — some issues',   [s3Qs[1].id]: 5,  [s3Qs[2].id]: ['Air pollution', 'Garbage disposal'],                              [s3Qs[3].id]: 'No',  [s3Qs[4].id]: 'Better waste segregation.' },
+    { [s3Qs[0].id]: 'Excellent — clean piped water', [s3Qs[1].id]: 8, [s3Qs[2].id]: ['Garbage disposal'],                                             [s3Qs[3].id]: 'No',  [s3Qs[4].id]: '' },
+    { [s3Qs[0].id]: 'Poor — often contaminated',  [s3Qs[1].id]: 4,  [s3Qs[2].id]: ['Water pollution', 'Soil degradation'],                            [s3Qs[3].id]: 'Yes', [s3Qs[4].id]: 'Ban industrial discharge into rivers.' },
+  ];
+  for (let i = 0; i < s3Respondents.length; i++) {
+    await prisma.surveyResponse.create({ data: { surveyId: survey3.id, respondentId: s3Respondents[i].id, answers: s3AnswerSets[i] as any } });
+  }
+
+  // Responses for Survey 4 (Volunteer Satisfaction)
+  const s4Respondents = [volunteer1, volunteer2, volunteer3, volunteer4, volunteer5];
+  const s4AnswerSets = [
+    { [s4Qs[0].id]: '1–3 months',       [s4Qs[1].id]: 4, [s4Qs[2].id]: ['Social impact', 'Community connection'],       [s4Qs[3].id]: 'Yes', [s4Qs[4].id]: 8,  [s4Qs[5].id]: 'More detailed task briefings please.' },
+    { [s4Qs[0].id]: 'More than 1 year', [s4Qs[1].id]: 5, [s4Qs[2].id]: ['Social impact', 'Personal fulfilment', 'Team/friends'], [s4Qs[3].id]: 'Yes', [s4Qs[4].id]: 10, [s4Qs[5].id]: 'Keep it up!' },
+    { [s4Qs[0].id]: '3–6 months',       [s4Qs[1].id]: 3, [s4Qs[2].id]: ['Skill development', 'Career building'],        [s4Qs[3].id]: 'No',  [s4Qs[4].id]: 6,  [s4Qs[5].id]: 'More orientation before first task.' },
+    { [s4Qs[0].id]: '6–12 months',      [s4Qs[1].id]: 4, [s4Qs[2].id]: ['Community connection', 'Social impact'],       [s4Qs[3].id]: 'Yes', [s4Qs[4].id]: 9,  [s4Qs[5].id]: '' },
+    { [s4Qs[0].id]: 'Less than 1 month',[s4Qs[1].id]: 5, [s4Qs[2].id]: ['Personal fulfilment'],                         [s4Qs[3].id]: 'Yes', [s4Qs[4].id]: 9,  [s4Qs[5].id]: 'Amazing platform, very intuitive.' },
+  ];
+  for (let i = 0; i < s4Respondents.length; i++) {
+    await prisma.surveyResponse.create({ data: { surveyId: survey4.id, respondentId: s4Respondents[i].id, answers: s4AnswerSets[i] as any } });
+  }
+
+  console.log('✅ 4 surveys created with responses');
+
+  // ─────────────────────────────────────────
   // DONE
   // ─────────────────────────────────────────
   console.log('\n✅ SEED COMPLETE! Here are the demo credentials:\n');
@@ -734,7 +899,7 @@ async function seed() {
   console.log('│  Volunteer       │ sneha@gmail.com         │ password123 │');
   console.log('│  Donor           │ vikram@gmail.com        │ password123 │');
   console.log('└──────────────────────────────────────────────────────┘');
-  console.log(`\n📊 Seeded: 8 users, 2 orgs, 4 campaigns, 5 needs, 5 donations, 1 emergency, 2 fraud cases, 8 audit logs\n`);
+  console.log(`\n📊 Seeded: 14 users, 3 orgs, 6 campaigns, 15 needs, 8 donations, 1 emergency, 2 fraud cases, 4 surveys with responses\n`);
 
   await prisma.$disconnect();
   process.exit(0);

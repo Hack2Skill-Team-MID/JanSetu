@@ -46,6 +46,8 @@ model User {
   taskApplications    TaskApplication[]
   communityNeeds      CommunityNeed[]    @relation("NeedCreator")
   surveyUploads       SurveyUpload[]
+  createdSurveys      Survey[]           @relation("SurveyCreator")
+  surveyResponses     SurveyResponse[]   @relation("SurveyRespondent")
   sentMessages        Message[]          @relation("MessageSender")
   auditLogs           AuditLog[]         @relation("AuditActor")
   notifications       Notification[]     @relation("UserNotifications")
@@ -546,6 +548,67 @@ model SurveyUpload {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════
+// SURVEY (Community Survey System)
+// ═══════════════════════════════════════════
+model Survey {
+  id              String   @id @default(uuid())
+  createdById     String
+  createdBy       User     @relation("SurveyCreator", fields: [createdById], references: [id])
+
+  title           String
+  description     String
+  coverEmoji      String   @default("📋")
+  category        String   @default("general") // general | healthcare | education | infrastructure | food_security | environment | employment | safety | other
+  status          String   @default("draft") // draft | published | closed
+  targetAudience  String   @default("all") // all | volunteer | donor | community | ngo_coordinator
+  isAnonymous     Boolean  @default(false)
+  deadline        DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  questions       SurveyQuestion[]
+  responses       SurveyResponse[]
+
+  @@index([status])
+  @@index([createdById])
+  @@index([category])
+}
+
+model SurveyQuestion {
+  id              String   @id @default(uuid())
+  surveyId        String
+  survey          Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  order           Int
+  questionText    String
+  questionType    String   // text | single_choice | multiple_choice | rating | scale | yes_no
+  options         String[] @default([])
+  isRequired      Boolean  @default(true)
+  helperText      String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([surveyId, order])
+}
+
+model SurveyResponse {
+  id              String   @id @default(uuid())
+  surveyId        String
+  survey          Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  respondentId    String
+  respondent      User     @relation("SurveyRespondent", fields: [respondentId], references: [id])
+
+  answers         Json     // { questionId: answer } map
+  submittedAt     DateTime @default(now())
+
+  @@unique([surveyId, respondentId])
+  @@index([surveyId])
+  @@index([respondentId])
 }
 
 // ═══════════════════════════════════════════
