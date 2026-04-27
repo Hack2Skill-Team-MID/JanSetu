@@ -12,9 +12,23 @@
 [![Gemini AI](https://img.shields.io/badge/Gemini-2.0%20Flash-4285F4?logo=google)](https://ai.google.dev)
 [![CI](https://github.com/Hack2Skill-Team-MID/JanSetu/actions/workflows/ci.yml/badge.svg)](https://github.com/Hack2Skill-Team-MID/JanSetu/actions)
 
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-jansetu.vercel.app-22c55e?style=for-the-badge)](https://jansetu.vercel.app)
+[![API](https://img.shields.io/badge/🔌%20API-jansetu--api.onrender.com-6366f1?style=for-the-badge)](https://jansetu-api.onrender.com/api/health)
+
 > Built for **Hack2Skill Hackathon 2026** · Team MID
 
 </div>
+
+---
+
+## 🚀 Live Demo
+
+| Service | URL |
+|---------|-----|
+| 🌐 **Frontend** | **https://jansetu.vercel.app** |
+| 🔌 **Backend API** | https://jansetu-api.onrender.com/api/health |
+
+> **Note:** Hosted on Render free tier — first request after inactivity may take ~30s to wake up.
 
 ---
 
@@ -236,7 +250,7 @@ cd apps/web && npm run dev
 | Network | `/api/network` | NGO discovery + **join-request** |
 | Messages | `/api/messages` | Inter-user messaging |
 | Analytics | `/api/analytics` | Impact metrics |
-| Surveys | `/api/surveys` | Upload + AI processing |
+| **Surveys** | `/api/surveys` | **Community surveys — CRUD, submit responses, view analytics** |
 | **Notifications** | `/api/notifications` | **Bell system, mark-read, delete** |
 | Audit | `/api/audit` | Audit trail logs |
 
