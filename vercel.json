@@ -1,11 +1,16 @@
 {
   "version": 2,
+  "framework": "nextjs",
+  "installCommand": "npm install",
   "buildCommand": "cd apps/web && npm install && npm run build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "rewrites": [],
   "env": {
     "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://jansetu-api.onrender.com/api/:path*"
+    }
+  ]
 }
